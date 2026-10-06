@@ -501,7 +501,9 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   already owns `libblkid`/`libuuid`/the generic `fsck` dispatcher —
   avoids duplicate ownership of the same library/binary names).
   Verified `mke2fs` is genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~15 packages) — in progress,
+- [x] Procps-ng 4.0.5 — built, installed after the ncurses.pc fix
+  (Document 11 §3.17). Verified `ps`/`top` are genuine aarch64.
+- [ ] Remaining Chapter 8 package list (~14 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
