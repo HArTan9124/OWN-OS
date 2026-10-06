@@ -14,6 +14,21 @@ Documents `01`–`09` in this folder remain the detailed reference
 do, in what order, and how do I know a stage is actually finished"
 layer on top of them — **start here when it's time to actually build**.
 
+> **⚠ Target changed to Raspberry Pi 4/5 (`aarch64`) on 2026-10-06 — read
+> [11-arm-raspberry-pi-adaptation.md](./11-arm-raspberry-pi-adaptation.md)
+> before working any stage below.** This document was originally written
+> for an x86_64 build booting via BIOS/GRUB with a native chroot phase.
+> Document 11 replaces: the chroot-and-build-natively mechanism (now full
+> cross-compilation throughout, no chroot at all), the entire GRUB-based
+> boot stage (now Raspberry Pi firmware boot), and the test-suite timing
+> (deferred to after first boot on real hardware). Stages **3, 4, and 5**
+> below are the most affected — their task lists still describe the
+> original x86_64/chroot mechanics and have not yet been rewritten
+> line-by-line for the cross-build approach; treat Document 11 as
+> overriding them wherever the two disagree, and expect this file's
+> per-stage task lists to be revised to match as each stage is actually
+> executed.
+
 ## How to use this document
 
 - Work stages **in order, top to bottom**. They are drawn as strictly
@@ -37,16 +52,23 @@ layer on top of them — **start here when it's time to actually build**.
 
 | Stage | Name | Maps to (phase1 milestone) | Gate clears | Acceptance | Status |
 |---|---|---|---|---|---|
-| 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D18 | S1 | ☐ Not started |
-| 1 | Host environment & partitioning | M1 | D1–D4 | S2 | ☐ Not started |
-| 2 | Source acquisition | M2 | D17 (storage) | S3 | ☐ Not started |
-| 3 | Cross-toolchain bootstrap | M3 | D4 | S4 | ☐ Not started |
-| 4 | Temporary tools + chroot entry | M4, M5 | D17 (checkpoint) | S5 | ☐ Not started |
-| 5 | Base system build | M6 | D5, D6, D18 | S6 | ☐ Not started |
-| 6 | System configuration | M7 | D7–D10 | S7 | ☐ Not started |
-| 7 | Bootable system | M8 | D11, D12 | S8 | ☐ Not started |
-| 8 | First boot & validation | M9 | D13, D14 | S9, S10, S11 | ☐ Not started |
-| 9 | Phase 1 closeout | M10 | D16 | S12 + all of S1–S11 | ☐ Not started |
+| 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ◐ In progress — D1, D12, D18–D20 resolved 2026-10-06; D2–D11, D13–D17 and Q1–Q3/Q15 still open |
+| 1 | Host environment & partitioning (image-file, not real partition — Doc 11 §1) | M1 | D1–D4 | S2 | ◐ In progress — host toolchain verified 2026-10-06 |
+| 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ☐ Not started |
+| 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☐ Not started |
+| 4 | **Full cross-build, no chroot** (replaces "temp tools + chroot entry" — Doc 11 §1/§3) | M4 | D17, D20 | S5 | ☐ Not started |
+| 5 | System configuration (unaffected by arch — applied directly, no chroot) | M5 | D7–D10 | S7 | ☐ Not started |
+| 6 | **Image assembly** (replaces "bootable system"/GRUB — Doc 11 §5) | M6 | D11, D19 | S8 | ☐ Not started |
+| 7 | Identity & final review (no chroot-exit step) | M7 | D13 | S10 | ☐ Not started |
+| 8 | **First boot on real Pi** (flash SD card, power on) | M8 | D14 | S9, S11 | ☐ Not started |
+| 9 | Phase 1 closeout | M9 | D16, D18 | S12 + all of S1–S11 | ☐ Not started |
+
+Stage numbering above (0–9) is kept stable as a reference frame; the
+*content* of Stages 4–8 changed substantially from what's written in
+their detailed sections further down (still the original x86_64/chroot/
+GRUB task lists — see the warning at the top of this document). Treat
+the table above, not the prose below it, as current until those
+sections are rewritten.
 
 Update the **Status** column (☐ Not started / ◐ In progress / ☑ Done)
 as the single source of truth for "where are we" — don't track progress
@@ -92,19 +114,37 @@ dately deferred with a stated reason.
 
 **Reference:** `docs/phase1/02-host-environment-and-partitioning.md`
 
-**Gate:** D1 (architecture), D2 (session strategy), D3 (partition
-layout), D4 (parallelism) resolved in Stage 0.
+**Gate:** D1 (architecture — ✅ resolved, `aarch64`/Pi 4/5), D2 (session
+strategy), D3 (partition layout, superseded by Doc 11 §1 — image file,
+not a real partition), D4 (parallelism) — D1 resolved in Stage 0,
+D2/D3/D4 still open.
 
 **Tasks:**
-- [ ] Run the book's `version-check.sh` on the actual build host;
-  resolve every `ERROR:` line (§2.1).
-- [ ] Confirm the host kernel supports UNIX 98 PTY
-  (`CONFIG_UNIX98_PTYS=y`) — required for later test suites (§2.1,
-  ties to `docs/phase1/09` §9.1 PTY-exhaustion risk).
-- [ ] Partition the target disk per the D3 decision — minimum 10 GB,
-  recommended 20–30 GB, plus swap and (if GPT) the GRUB BIOS partition
-  (§2.3).
-- [ ] Format the LFS partition `ext4`; initialize swap if new (§2.4).
+- [x] Run the book's `version-check.sh`-equivalent checks on the actual
+  build host (this cloud session); resolve every gap. **Done
+  2026-10-06**: Ubuntu 24.04 base, Bash 5.2.21, Binutils 2.42 (ld),
+  Bison 3.8.2, GCC/G++ 13.3.0, Coreutils present, Diffutils 3.10,
+  Findutils 4.9.0, Grep 3.11, Gzip 1.12, M4 1.4.19, Make 4.3, Patch
+  2.7.6, Perl present, Python 3.13.16, Sed 4.9, Tar 1.35, Xz 5.4.5,
+  kernel 6.18.44 — all within LFS's floor/ceiling. Two gaps found and
+  fixed: `gawk` and `texinfo` were missing, installed via `apt-get
+  install gawk texinfo`; confirmed `/usr/bin/awk` resolves to
+  `/usr/bin/gawk` afterward. 4 cores / 15 GiB RAM available (meets the
+  "≥4 cores, ≥8 GB" recommendation).
+- [ ] Confirm the host kernel supports UNIX 98 PTY — moot for this
+  build: Document 11 §6 (D20) defers all native test execution to
+  after first boot on the real Pi, so host PTY support is not a build
+  blocker here. Revisit only if the build methodology changes.
+- [ ] ~~Partition the target disk~~ **Superseded by Doc 11 §1**: this
+  session has no real disk to partition. Instead: create a loop-mounted
+  disk image file (verified working in this container — root access,
+  `losetup`, `mkfs.ext4`, and loop-mount all confirmed functional
+  2026-10-06) sized per D3's eventual decision (10–30 GB; this
+  container currently has ~30 GB free, so the lower end of that range
+  is the realistic ceiling here).
+- [ ] Format the image file `ext4`; no swap needed (cross-build, no
+  native compilation of the heaviest packages happens on constrained
+  target hardware).
 - [ ] `export LFS=...`, `umask 022`; make both durable in the relevant
   shell profile(s) (§2.5).
 - [ ] Mount the partition, fix ownership/mode, verify no `nosuid`/

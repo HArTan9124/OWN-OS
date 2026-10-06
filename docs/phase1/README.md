@@ -18,6 +18,12 @@ combines this folder with `docs/requirements/` (gates, requirement IDs,
 success criteria) into 10 ordered stages. Documents `01`–`10` below are
 its reference material, not a separate path to follow.
 
+**⚠ Target is now Raspberry Pi 4/5 (`aarch64`), not x86_64** — decided
+2026-10-06. Read
+[11-arm-raspberry-pi-adaptation.md](./11-arm-raspberry-pi-adaptation.md)
+first; it states exactly what that changes in Documents 01–10 (mainly:
+no GRUB, no chroot phase, full cross-compilation throughout).
+
 ## Reading order
 
 | # | Document | Covers |
@@ -31,6 +37,7 @@ its reference material, not a separate path to follow.
 | 6 | [06-system-configuration.md](./06-system-configuration.md) | Chapter 9: bootscripts, udev/device management, networking, locale, console |
 | 7 | [07-bootable-system.md](./07-bootable-system.md) | Chapter 10: fstab, kernel configuration/build, GRUB |
 | 8 | [08-finalization-and-post-lfs.md](./08-finalization-and-post-lfs.md) | Chapter 11: first boot, sanity checks, BLFS roadmap (workstation vs. server) |
+| 11 | [11-arm-raspberry-pi-adaptation.md](./11-arm-raspberry-pi-adaptation.md) | **Read this one too** — the `aarch64`/Raspberry Pi 4/5 target change: cross-build methodology, toolchain triplet, dropped GRUB, Pi firmware boot, kernel source choice |
 | 9 | [09-testing-validation-and-risk.md](./09-testing-validation-and-risk.md) | Test-suite policy, SBU time budgeting, backup/restore checkpoints, troubleshooting, risk register |
 | 10 | [10-roadmap-and-open-decisions.md](./10-roadmap-and-open-decisions.md) | Master milestone checklist + the decisions only the project owner can make before Phase 1 execution starts |
 

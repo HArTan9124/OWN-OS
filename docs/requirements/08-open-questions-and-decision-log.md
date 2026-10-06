@@ -48,12 +48,30 @@ folders simultaneously.
 
 ## Decision log
 
-*(Append new entries above this line, newest first, each dated. Empty
-until the first question above is actually resolved.)*
+**2026-10-06 — Target hardware confirmed: Raspberry Pi 4 or 5
+(`aarch64`), not x86_64.** Resolves `docs/phase1` **D1**. Build happens
+via full cross-compilation in the cloud build session; the Pi is
+touched only once, to flash and boot the finished SD-card image
+(resolves **D20** — chosen over LFS's own "Cross Edition" approach,
+which would have required part of the build to run natively on the
+Pi). Consequences resolved in the same pass: **D12** (no GRUB —
+Raspberry Pi firmware boot instead), **D19** (kernel source: mainline
+`kernel.org`, not the Raspberry Pi Foundation's fork — accepted
+trade-off of incomplete camera/GPU-acceleration support), **D18**
+(test-suite execution deferred to after first boot on real hardware,
+since full cross-compilation means nothing runs natively on the build
+host at all). Full technical detail in
+`docs/phase1/11-arm-raspberry-pi-adaptation.md`. Still open from this
+same decision round: who runs the build day-to-day (solo, per A1,
+unchanged), and Q15/D15 (OWN-OS's purpose) — the architecture choice
+doesn't answer that, it only fixes what hardware any answer runs on.
 
 ---
 
-_No decisions recorded yet — this project is still in the planning
-stage described in `docs/requirements/README.md`. The first entries
-here should be the resolutions to Q15/D15 and Q1–Q3, since almost
+*(Append new entries above this line, newest first, each dated.)*
+
+---
+
+_The first entries above resolve the architecture/build-methodology
+fork. Still needed: resolutions to Q15/D15 and Q1–Q3, since almost
 everything else cascades from those three._
