@@ -266,38 +266,47 @@ has Glibc and libstdc++ correctly installed under `usr/lib` with no
 
 ---
 
-## Stage 4 — Temporary tools + chroot entry
+## Stage 4 — Full cross-build of the base system
 
-**Reference:** `docs/phase1/04-toolchain-bootstrap.md` §4.4–4.6
+**Superseded task list — see Document 11 §3.2.** There is no `lfs`
+user, no chroot, no "temporary tools then rebuild natively" split in
+this methodology (D20) — every package is cross-compiled exactly once,
+directly from this session, using Chapter 8's (final, fuller-featured)
+flags. Chapter 6's separate pass, Binutils pass 2, and GCC pass 2 are
+all skipped entirely (§3.2 explains why). "Entering chroot" (old §4.5
+steps 1–3) never happens; the FHS tree and essential files (old §4.5
+steps 4–5) still get created, just directly in `$OWNOS_ROOT` with no
+privilege-separation ceremony around it.
 
-**Gate:** D17 (checkpoint storage) — confirm the backup target is ready
-before the end-of-stage checkpoint.
+**Reference:** `docs/phase1/05-base-system-build.md` for the package
+list and order (minus GRUB, Document 11 §4); pull each package's exact
+Chapter 8 configure flags from the live book at build time, same as
+done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
 
-**Tasks:**
-- [ ] **As `lfs`:** cross-compile, in order — M4 → Ncurses → Bash →
-  Coreutils → Diffutils → File → Findutils → Gawk → Grep → Gzip → Make
-  → Patch → Sed → Tar → Xz → Binutils pass 2 → GCC pass 2 (§4.4).
-- [ ] **As `root`:** `chown` the whole `$LFS` tree back to `root:root`
-  (§4.5 step 1).
-- [ ] Mount virtual kernel filesystems (`dev`, `devpts`, `proc`, `sys`,
-  `run`, `dev/shm`) into `$LFS` (§4.5 step 2).
-- [ ] Enter chroot with the exact clean environment specified (§4.5
-  step 3).
-- [ ] Build the full FHS directory tree; re-confirm `/usr/lib64`
-  absent (§4.5 step 4).
-- [ ] Create essential files: `/etc/mtab`, `/etc/hosts`,
-  **first** `/etc/passwd`/`/etc/group` (fixed GIDs, incl. `tty`=5), the
-  temporary `tester` account, initialized log files (§4.5 step 5).
-- [ ] **Natively, inside chroot:** build Gettext → Bison → Perl →
-  Python → Texinfo → Util-linux (§4.5 step 6).
-- [ ] Clean up (`/usr/share/{info,man,doc}`, stray `.la` files, delete
-  `/tools`) and **take the Chapter-7 backup checkpoint**, exported to
-  the D17 location, not just local disk (§4.5 step 7,
-  `docs/phase1/09` §9.3).
+**Gate:** D17 ✅ (checkpoint discipline already active — see Document 11
+§3.3, a real mount-loss incident already tested this).
 
-**Acceptance (S5):** Chroot entered successfully (prompt resolves once
-`/etc/passwd` exists); all final temporary tools built; checkpoint
-archive verified to exist outside the ephemeral build environment.
+**Progress (updated as the build proceeds):**
+- [x] M4 1.4.20 — built, installed.
+- [x] Ncurses 6.5 — built, installed. **Deviation:** C++ bindings
+  (`--with-cxx-shared`) dropped (`--without-cxx` instead) — a known
+  `std::byte` conflict between ncurses 6.5's C++ wrapper and GCC 15's
+  libstdc++ (the book's pinned dated snapshot, newer than our
+  substitute, likely has this fixed upstream). Not needed for a
+  minimal bootable system; revisit only if a later package specifically
+  needs `libncurses++`.
+- [ ] Remaining Chapter 8 package list (~85 packages) — in progress,
+  see live status in chat / commit history rather than duplicated here
+  to avoid this file going stale mid-build.
+- [ ] FHS tree + essential files (`/etc/passwd`, `/etc/group`,
+  `/etc/hosts`, `/etc/mtab`, log files) created directly in
+  `$OWNOS_ROOT`.
+- [ ] Cleanup (`/usr/share/{info,man,doc}`, stray `.la` files) and a
+  checkpoint export at the close of this stage.
+
+**Acceptance (S5, adapted):** Every Chapter 8 package (minus GRUB)
+cross-built and installed into `$OWNOS_ROOT`; FHS tree complete;
+checkpoint exported.
 
 ---
 

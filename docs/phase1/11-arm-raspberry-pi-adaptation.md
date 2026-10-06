@@ -132,6 +132,71 @@ immediately after extracting the GCC source** (same point in the
 sequence as the book's own x86_64 `t-linux64` patch) — not as an
 afterthought once a problem shows up downstream.
 
+### 3.2 Methodology simplification: Chapter 6 ("temporary tools") is skipped entirely
+
+Realized while starting what would have been the Chapter-6-equivalent
+pass (M4, Ncurses, ...): **stock LFS's Chapter 6 exists for exactly one
+reason — to bootstrap just enough of a cross-compiled toolchain to
+`chroot` into, since the host's own tools can't be trusted/used inside
+that isolated environment.** Our methodology (D20) never chroots at
+all; every package is cross-compiled directly from this x86_64 session,
+using *this session's own host tools* (bash, make, sed, tar, gawk —
+already verified present in Stage 1) to drive the cross-compilation
+process, exactly like every command in this whole log already does.
+There is no point in the build where a "temporary, bootstrap-only"
+version of bash/coreutils/make/sed/etc. is ever actually needed — we
+already have a perfectly good bash/make/sed driving the build, it's
+just the host's own x86_64 copy, which is completely fine since it
+never has to run *on* the target.
+
+**Consequence: for every package the book lists in both Chapter 6 and
+Chapter 8 (Binutils, GCC, Ncurses, Sed, Gettext, Bison, Grep, Bash, M4,
+File, Findutils, Gawk, Gzip, Make, Patch, Tar, Xz, Util-linux, Perl,
+Texinfo — the list in `03-sources-and-packages.md` §3.2's closing
+note), build it exactly once, using Chapter 8's (fuller-featured,
+final) configure flags, not Chapter 6's (deliberately limited) ones.**
+Skip Chapter 6's separate, simpler builds of these packages entirely —
+they would just get overwritten by the Chapter 8 pass anyway, in stock
+LFS too. This also drops **Binutils pass 2** and **GCC pass 2**
+specifically: those exist in the book purely to produce a *native*
+(not cross) compiler for use inside the chroot — meaningless here,
+since GCC pass 1 (already built, Document 11 §3) remains the only
+compiler this entire project ever uses, for every remaining package.
+
+Already-built-the-Chapter-6-way packages (M4, in this session, before
+this was realized) don't need redoing — Chapter 8's M4 page uses the
+same minimal flags, so nothing was wasted. **Document 00's Stage 4
+section should be read as "build the Chapter 8 package list, once,
+cross-compiled, in dependency order" — not "Chapter 6 then Chapter 8."**
+
+### 3.3 Confirmed risk: loop mounts do not survive a container restart
+
+Discovered the hard way mid-Stage-4: this session's underlying
+container restarted at some point (evidenced by `/dev/loop0`'s device
+node timestamp jumping forward with no process-visible cause), which
+silently dropped the loop-device attachment and the mount at
+`$OWNOS_ROOT` — `/build/root` was briefly an **empty directory** with
+no indication anything was wrong short of checking `mountpoint -q` or
+noticing files that should exist didn't. **The backing image file
+itself (`/build/root.img`) was untouched and fully recoverable** — only
+the in-kernel loop attachment and mount were lost, not the data.
+
+**Mitigations now in place:**
+- `/build/env.sh` (sourced at the start of every build command) now
+  checks `mountpoint -q /build/root` and automatically re-attaches a
+  loop device and remounts if needed, *before* exporting any build
+  variables — so this failure mode self-heals on the next command
+  rather than silently building into a phantom empty directory.
+- A compressed checkpoint of `/build/root.img` + `/build/tools` +
+  `/build/sources` is taken immediately after this was discovered
+  (ties to `docs/requirements` D17's "periodic checkpoints, exported
+  outside the container" resolution) — this risk is exactly what that
+  decision was hedging against, and it was right to.
+- **Any resumed session must run `source /build/env.sh` before any
+  other build command** — if the mount silently dropped between
+  sessions, the self-healing check only runs when this file is
+  sourced, not automatically.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
