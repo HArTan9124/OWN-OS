@@ -54,7 +54,7 @@ layer on top of them — **start here when it's time to actually build**.
 |---|---|---|---|---|---|
 | 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ☑ Done for Phase 1 purposes (2026-10-06) — D1–D14, D16–D20 resolved; **D15/Q15 (purpose) and Q1–Q3 deliberately deferred — they gate Phase 2, not Phase 1 execution** |
 | 1 | Host environment & partitioning (image-file, not real partition — Doc 11 §1) | M1 | D1–D4 | S2 | ◐ In progress — host toolchain verified 2026-10-06 |
-| 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ☐ Not started |
+| 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ◐ In progress — 26/84 packages + Pi firmware downloaded; 58 blocked on network allowlist |
 | 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☐ Not started |
 | 4 | **Full cross-build, no chroot** (replaces "temp tools + chroot entry" — Doc 11 §1/§3) | M4 | D17, D20 | S5 | ☐ Not started |
 | 5 | System configuration (unaffected by arch — applied directly, no chroot) | M5 | D7–D10 | S7 | ☐ Not started |
@@ -161,20 +161,34 @@ D2/D3/D4 still open.
 
 **Reference:** `docs/phase1/03-sources-and-packages.md`
 
-**Gate:** D17 (checkpoint/archive storage location) resolved — decide
-where downloaded sources and later backups live before downloading,
-since Stage 4's backup includes this directory.
+**Gate:** D17 ✅ resolved (periodic exported checkpoints).
 
 **Tasks:**
-- [ ] Create `$LFS/sources` with sticky-bit, world-writable permissions
-  (§3.1).
+- [x] Create a sources directory — `/build/sources/pkgs` in this
+  session (adapted from `$LFS/sources` since there's no real partition
+  here, per Document 11 §1). Done 2026-10-06.
 - [ ] Check the LFS security advisories page before finalizing any
-  version (§3.1, §3.4).
-- [ ] Download all ~90 package tarballs + 6 patches (§3.2–3.3).
-- [ ] Verify every MD5 sum against the book's published values — do not
-  skip this (§3.4).
-- [ ] Confirm total disk budget still holds given actual downloaded +
-  expected build sizes (ties back to Stage 1 partition sizing).
+  version (§3.1, §3.4) — not yet done.
+- [◐] Download all packages (minus GRUB, per Doc 11 §4) + 6 patches
+  (§3.2–3.3). **26 of 84 downloaded successfully (104 MB) as of
+  2026-10-06** — everything reachable via GitHub release assets,
+  PyPI, and (surprisingly) `downloads.sourceforge.net`/
+  `prdownloads.sourceforge.net` is done. **58 packages are still
+  blocked** — this session's network policy rejects `ftp.gnu.org`,
+  `sourceware.org`, `kernel.org`, and 12 other domains wholesale. The
+  exact, empirically-verified list (every URL actually attempted, not
+  guessed) is in `/build/sources/BLOCKED_DOMAINS.txt` in this session
+  and reproduced in the chat. **This blocks Stage 3 entirely** —
+  Binutils, GCC, and Glibc are all on the blocked list, so the
+  cross-toolchain cannot be built until the network allowlist is
+  widened. The download script (`/build/sources/download-all.sh`) is
+  idempotent — re-running it after the allowlist changes will fetch
+  only what's still missing.
+- [ ] Verify every MD5 sum against the book's published values — not
+  yet done (waiting on the remaining 58 files).
+- [x] Disk budget confirmed: 104 MB so far against ~30 GB available in
+  this session; full ~400–450 MB source set plus build artifacts fits
+  comfortably.
 
 **Acceptance (S3):** Every required package/patch present in
 `$LFS/sources` with a verified-matching MD5.
