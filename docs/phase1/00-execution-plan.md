@@ -371,7 +371,15 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   incompatibility between inetutils 2.6's `/proc/net/dev`-parsing code
   and glibc 2.42, unrelated to cross-compiling). `ifconfig` moved to
   `/usr/sbin` per the book.
-- [ ] Remaining Chapter 8 package list (~51 packages) — in progress,
+- [x] **Perl** 5.42.0 — built via the third-party `perl-cross` project
+  (stock `Configure -Dusecrosscompile` needs a live reachable target
+  device, not viable here). Full details, including the borrowed
+  5.41.8 patchset and two real bugs fixed (a patch-hunk source-drift
+  conflict, a perl-cross template bug producing a malformed `#
+  HAS_FDOPENDIR` line instead of `#define HAS_FDOPENDIR` in generated
+  headers) in Document 11 §3.10. Verified the final `perl` binary is
+  genuine aarch64.
+- [ ] Remaining Chapter 8 package list (~50 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
