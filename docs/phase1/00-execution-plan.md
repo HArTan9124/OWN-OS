@@ -397,7 +397,15 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   a side effect), Libffi 3.5.2 — built, installed. OpenSSL's own
   `Configure` recognized `linux-aarch64` plus `--cross-compile-prefix=`
   directly, no adaptation needed beyond that.
-- [ ] Remaining Chapter 8 package list (~43 packages) — in progress,
+- [ ] **Python** 3.13.7 — cross-build in progress via CPython's own
+  documented two-pass recipe: a native x86_64 "build Python" built
+  first (plain `./configure && make`, no `--host`), then the target
+  aarch64 build configured with `--with-build-python=<native
+  python>`. Hit the pkg-config contamination bug (§3.11) on the native
+  pass; fixed by unsetting the sysroot redirect for that one
+  configure. Target pass correctly detected zlib/bz2/lzma/ssl/hashlib
+  against the aarch64 sysroot.
+- [ ] Remaining Chapter 8 package list (~42 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
