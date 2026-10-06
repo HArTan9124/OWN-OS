@@ -365,7 +365,13 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
 - [x] Bash 5.3 (with `/bin/sh` symlink), Libtool 2.5.4, GDBM 1.26,
   Gperf 3.3 — built, installed. All plain cross-compiler, no issues.
 - [x] Expat 2.7.1 — built, installed, no issues.
-- [ ] Remaining Chapter 8 package list (~53 packages) — in progress,
+- [x] Inetutils 2.6, Less 679 — built, installed. Inetutils needed
+  `-DPATH_PROCNET_DEV="/proc/net/dev"` added to CPPFLAGS — this macro
+  was removed from modern glibc headers entirely (a genuine upstream
+  incompatibility between inetutils 2.6's `/proc/net/dev`-parsing code
+  and glibc 2.42, unrelated to cross-compiling). `ifconfig` moved to
+  `/usr/sbin` per the book.
+- [ ] Remaining Chapter 8 package list (~51 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
