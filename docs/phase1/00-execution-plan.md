@@ -317,14 +317,23 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   `/etc/shadow` still need hand-writing (no `useradd`/`pwconv` run —
   nothing executes cross-built binaries on this host) — folded into the
   "FHS tree + essential files" task below rather than done piecemeal.
-- [ ] **Binutils (final) and GCC (final)** — next, and structurally the
-  hardest remaining step: unlike Stage 3's Binutils/GCC pass 1 (which
-  *run on* x86_64 to produce aarch64 code — a normal cross-compiler),
-  these need to *run on* aarch64 (the Pi, once booted) and themselves
-  *produce* aarch64 code — a Canadian cross (`--build=x86_64-...
-  --host=aarch64-... --target=aarch64-...`). Needed so the finished OS
-  has its own native compiler, not just binaries we cross-compiled for
-  it. Distinct purpose from pass 1, not a repeat of it.
+- [x] **Binutils (final)** 2.45 — Canadian cross (`--build=x86_64-...
+  --host=$OWNOS_TGT --target=$OWNOS_TGT`) built and installed. Verified
+  `readelf`/`ld`/etc. in `$OWNOS_ROOT/usr/bin` are genuine aarch64 PIE
+  executables — a Binutils that *runs on* the Pi, not the x86_64-hosted
+  cross-Binutils from Stage 3. `tooldir=/usr` avoided a `/usr/<triplet>`
+  install layout. No source/flag changes needed beyond the triplets —
+  worked first try once Stage 3's pass-1 `aarch64-unknown-linux-gnu-gcc`
+  was found automatically via the standard `${host_alias}-gcc`
+  convention.
+- [ ] **GCC (final)** — next, same Canadian-cross shape as Binutils but
+  materially harder: GCC's own build needs some host-run code generators
+  that must execute on x86_64 (this build's `build`) while the compiler
+  itself must run on aarch64 (`host`/`target`), and the resulting
+  compiler's baked-in sysroot path must be `/` (correct once it's
+  running on the Pi's own real root), not `$OWNOS_ROOT` (this build's
+  staging path) — needs `--with-sysroot=/
+  --with-build-sysroot=$OWNOS_ROOT` to separate those two concerns.
 - [ ] Remaining Chapter 8 package list (~63 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
