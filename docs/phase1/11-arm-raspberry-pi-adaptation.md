@@ -550,6 +550,38 @@ symbol gates, never into a generated file (`config.h`, `Makefile`,
 anything `config.status` owns) since `make` will regenerate those and
 discard a manual edit on the next build.
 
+### 3.14 Ninja: blocked source download, then a self-rebuild step that can't execute cross-compiled
+
+Ninja's only source-tarball URLs on GitHub are `archive/vX.Y.Z` links
+(`codeload.github.com`), which stay blocked under this session's "Full"
+network policy exactly like every other source-archive link in this
+build (Document 11 §1/download-all.sh notes) — unlike most GitHub-hosted
+packages here, Ninja has no equivalent `releases/download/` *source*
+asset (its release assets are prebuilt binaries for other platforms).
+**Found via PyPI instead**: the `ninja` PyPI package (a Python wheel
+wrapper that exists so `pip install ninja` works) ships the complete
+upstream C++ source as `ninja-upstream/` inside its sdist, and PyPI is
+already in this session's always-reachable allowlist. Downloaded via
+`pip download ninja==<ver> --no-binary :all:` and used the bundled
+source directly — functionally identical to the real tarball, just a
+different distribution channel. Only `1.13.0` was available this way
+(the pinned `1.13.1` isn't on PyPI, `1.13.2` is newer) — logged as a
+version deviation, same practice as Acl/Attr/Ncurses earlier in Stage
+2.
+
+Ninja's own `configure.py --bootstrap` compiles a first working binary
+directly (respects `CXX`/`CC` env vars, cross-compiled fine), then
+**renames it and executes it** to regenerate itself via its own build
+graph — the self-execution-during-build pattern yet again, this time
+with no built-in native/cross split to opt out of. Unlike File/Bc/
+IPRoute2 (which have their own first-class support for this), Ninja's
+script just crashes (`OSError: Exec format error`) when the self-exec
+step hits the aarch64 binary. **Fix: let it crash there.** The first
+compiled binary (the one it was about to rename and re-invoke) is
+already a complete, correctly-linked aarch64 `ninja` — confirmed by
+`file` — so it was installed directly, skipping the optimization-only
+second pass entirely.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still

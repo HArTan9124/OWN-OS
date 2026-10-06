@@ -451,7 +451,21 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   command line alongside the cross `CC=`. Verified `tc`/`ip` are
   aarch64 while the `netem` generators stayed native x86_64, as
   intended.
-- [ ] Remaining Chapter 8 package list (~23 packages) — in progress,
+- [x] **Ninja** 1.13.0 (deviation: pinned 1.13.1 not downloadable at
+  all — GitHub only ships source via blocked `codeload` archive
+  links for this package; found the real upstream source bundled
+  inside the PyPI `ninja` package's sdist instead) and **Meson**
+  1.8.3 — built/installed. Ninja's `configure.py --bootstrap`
+  self-executes its first compiled binary to regenerate itself — hit
+  the self-execution pattern with no built-in opt-out this time;
+  fixed by just letting that final step crash (`Exec format error`)
+  and installing the already-complete first-pass aarch64 binary
+  directly. Meson installed via pip `--target` as before, needed a
+  hand-written `/usr/bin/meson` launcher script since `pip install
+  --target` doesn't generate console-script entry points (a real,
+  general gap for every further Python CLI tool installed this way).
+  See Document 11 §3.14.
+- [ ] Remaining Chapter 8 package list (~21 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
