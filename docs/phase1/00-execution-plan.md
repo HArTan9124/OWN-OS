@@ -359,7 +359,10 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   going forward is the plain cross-compiler (`${OWNOS_TGT}-gcc`, no
   `-std=` override), falling back to `$OWNOS_CC`'s `-std=gnu17` only
   when a package specifically hits the old-K&R-code failure pattern.
-- [ ] Remaining Chapter 8 package list (~61 packages) — in progress,
+- [x] Gettext 0.26, Bison 3.8.2, Grep 3.12 — built, installed (all
+  plain cross-compiler, no `-std=` override needed). Gettext needed the
+  book's `chmod 0755 /usr/lib/preloadable_libintl.so` post-install fix.
+- [ ] Remaining Chapter 8 package list (~58 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
