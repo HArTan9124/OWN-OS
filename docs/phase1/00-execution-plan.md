@@ -432,7 +432,12 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   `gl_cv_func_strcasecmp_works=yes` preset (gnulib's own test can't
   run cross-compiled; glibc's strcasecmp is known-correct) — same
   class of fix as Flex's malloc cache vars (§3.4).
-- [ ] Remaining Chapter 8 package list (~28 packages) — in progress,
+- [x] **Coreutils** 9.7 — built, installed with both mandatory
+  patches. The i18n patch's missing `GNULIB_MBFILE` define needed a
+  source-header fix (Document 11 §3.13) rather than a config.h edit or
+  full `autoreconf`/gnulib-bootstrap. `chroot` moved to `/usr/sbin`
+  per the book. Verified `ls`/`cp`/`chroot`/etc. are genuine aarch64.
+- [ ] Remaining Chapter 8 package list (~27 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
