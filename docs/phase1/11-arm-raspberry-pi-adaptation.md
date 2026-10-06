@@ -596,6 +596,23 @@ Vim `9.2.0858` (pinned: `9.1.1629`) and Systemd `257.13` (pinned:
 deviations per the usual practice, not exact matches but close enough
 that a behavior-affecting regression is unlikely for either.
 
+### 3.16 Missing libtinfo compatibility symlinks from the Ncurses build
+
+Util-linux's `ul` failed to link with `cannot find -ltinfo`. The
+book's own Ncurses page creates `libncurses.so`/`libtinfo.so`/
+`libtinfo.so.6` as symlinks to `libncursesw.so`/`.so.6` right after
+installing Ncurses, since Ncurses builds terminfo support bundled
+into the wide-character library rather than as a separate `libtinfo`
+— this step was missed when Ncurses was built early in Stage 4 (its
+entry in the progress checklist only mentions the `--without-cxx`
+deviation, not this). Fixed now, retroactively: created
+`libncurses.so`/`libtinfo.so` → `libncursesw.so` and `libtinfo.so.6`
+→ `libncursesw.so.6` in `$OWNOS_ROOT/usr/lib`. Worth checking for any
+earlier-built package that silently linked against the wide-char
+library directly instead of hitting this missing symlink — none has
+so far, but Util-linux is the first package in build order to want
+`-ltinfo` by name.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
