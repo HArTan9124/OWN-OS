@@ -510,6 +510,41 @@ configuring any native-helper build**, and confirm with `grep -n
 PKG_CONFIG Makefile` after configuring that no `/build/root` path
 leaked in before running `make`.
 
+### 3.13 Coreutils' i18n patch requires regenerating `configure` (autoreconf)
+
+Applying `coreutils-9.7-i18n-1.patch` (one of the book's mandatory
+patches) and then running the tarball's pre-generated `./configure`
+directly built fine at configure time but failed to *compile*:
+`src/expand-common.c` includes `lib/mbfile.h`, which includes
+`lib/mbchar.h`, whose `struct mbchar` only has a `buf` member when
+`GNULIB_MBFILE` is defined — and the patch adds the `AC_DEFINE
+([GNULIB_MBFILE], ...)` line to `configure.ac` (source), not to the
+pre-built `configure` script or `config.h` we were actually using.
+The patch touches `configure.ac`, `m4/*.m4`, and `*/local.mk`
+(Makefile.am fragments) — exactly the class of change that requires
+regenerating the build system, not just re-running the existing
+`configure`. First attempted `autoreconf -fiv` after applying both patches (needed
+`autopoint` on the build host, its own separate Debian/Ubuntu package —
+`apt-get install autopoint` — not bundled into the `gettext` package
+the host already had, despite autoreconf invoking it as gettext's own
+tool). That led into a worse rabbit hole: Coreutils bundles a gnulib
+snapshot with its own `./bootstrap` process for regenerating `m4/`
+from a full gnulib module list, and plain `autoreconf` without that
+step fails with "possibly undefined macro" errors for gnulib-internal
+macros (`gl_PTHREADLIB`, `gl_WEAK_SYMBOLS`, etc.) that live outside
+what's already checked into the tarball's `m4/`. Not worth chasing
+for a single missing `#define`. **Simpler fix actually used:**
+re-extract and re-patch cleanly, run the tarball's own shipped
+`./configure` unmodified (no autoreconf), then hand-add `#define
+GNULIB_MBFILE 1` directly to the generated `lib/config.h` before
+`make` — equivalent to what the regenerated `configure` would have
+produced, without needing to regenerate anything. **General lesson:**
+a patch touching `configure.ac`/`m4/*.m4` doesn't always need a full
+`autoreconf` — when the actual effect is one or two `AC_DEFINE`s,
+check what symbol(s) would have ended up in `config.h` and add them
+by hand; save `autoreconf` for patches that add new configure *checks*
+or *options*, not just preprocessor defines.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
