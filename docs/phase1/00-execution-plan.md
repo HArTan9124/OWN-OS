@@ -52,7 +52,7 @@ layer on top of them — **start here when it's time to actually build**.
 
 | Stage | Name | Maps to (phase1 milestone) | Gate clears | Acceptance | Status |
 |---|---|---|---|---|---|
-| 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ◐ In progress — D1, D12, D18–D20 resolved 2026-10-06; D2–D11, D13–D17 and Q1–Q3/Q15 still open |
+| 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ☑ Done for Phase 1 purposes (2026-10-06) — D1–D14, D16–D20 resolved; **D15/Q15 (purpose) and Q1–Q3 deliberately deferred — they gate Phase 2, not Phase 1 execution** |
 | 1 | Host environment & partitioning (image-file, not real partition — Doc 11 §1) | M1 | D1–D4 | S2 | ◐ In progress — host toolchain verified 2026-10-06 |
 | 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ☐ Not started |
 | 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☐ Not started |

@@ -10,22 +10,22 @@ are either answered or explicitly deferred with a reason.**
 | # | Decision | Where discussed | Recommendation in this plan | Status |
 |---|---|---|---|---|
 | D1 | Target architecture | Doc 1 §1.2, **Doc 11** | ~~x86_64 only~~ **RESOLVED 2026-10-06: `aarch64`, Raspberry Pi 4 or 5. Build happens via full cross-compilation in this cloud session (x86_64); the Pi is only touched to flash/boot the finished image. See Document 11.** | **Resolved** |
-| D2 | Single continuous build session vs. documented multi-session resume | Doc 2 §2.2 | Decide based on actual available session length | **Needs sign-off** |
-| D3 | Partition layout: root-only vs. +`/boot` (+`/boot/efi` if UEFI) | Doc 2 §2.3 | Root-only for first build | **Needs sign-off** |
-| D4 | Parallel build job count (`-j`) | Doc 4 §4.1 | `$(nproc)` | **Needs sign-off** |
-| D5 | Debug-symbol stripping | Doc 5 §5.4 | Skip for first build (keep debuggability) | **Needs sign-off** |
-| D6 | Package management strategy | Doc 5 §5.3 | None for Phase 1; revisit explicitly in Phase 2 | **Needs sign-off** |
-| D7 | Init system: SysVinit vs. systemd | Doc 6 §6.1 | SysVinit (matches base LFS; systemd is a Phase 2+ undertaking) | **Needs sign-off** |
-| D8 | Network interface naming: persistent (`enp5s0`-style) vs. legacy `ethN` | Doc 6 §6.3 | Keep persistent naming | **Needs sign-off** |
-| D9 | Networking: static IP vs. DHCP | Doc 6 §6.4 | Static IP for Phase 1 | **Needs sign-off** |
-| D10 | Default system locale | Doc 6 §6.6 | `C.UTF-8` | **Needs sign-off** |
-| D11 | `/etc/fstab` + GRUB: device-path vs. UUID/PARTUUID identification | Doc 7 §7.1/§7.3 | Decide together, consistently; UUID if disk layout may change | **Needs sign-off** |
+| D2 | Single continuous build session vs. documented multi-session resume | Doc 2 §2.2 | **RESOLVED 2026-10-06: proceed continuously; checkpoint periodically (see D17) so a session loss costs minimal redo.** | Resolved (default applied) |
+| D3 | Image size (was: partition layout) | Doc 2 §2.3, Doc 11 §1 | **RESOLVED 2026-10-06: ~6 GB root-partition image + ~256 MB FAT32 boot partition, assembled on the 32 GB SD card confirmed by the owner. Well under the card's capacity (final system is ~3 GB per the book); root partition is resizable to use the full card later if wanted, not required for Phase 1.** | Resolved (default applied) |
+| D4 | Parallel build job count (`-j`) | Doc 4 §4.1 | **RESOLVED: `$(nproc)` — this build session has 4 cores.** | Resolved (default applied) |
+| D5 | Debug-symbol stripping | Doc 5 §5.4 | **RESOLVED: skip for first build (keep debuggability).** | Resolved (default applied) |
+| D6 | Package management strategy | Doc 5 §5.3 | **RESOLVED: none for Phase 1; revisit explicitly in Phase 2.** | Resolved (default applied) |
+| D7 | Init system: SysVinit vs. systemd | Doc 6 §6.1 | **RESOLVED: SysVinit (matches base LFS; systemd is a Phase 2+ undertaking).** | Resolved (default applied) |
+| D8 | Network interface naming: persistent (`enp5s0`-style) vs. legacy `ethN` | Doc 6 §6.3 | **RESOLVED: keep persistent naming.** | Resolved (default applied) |
+| D9 | Networking: static IP vs. DHCP | Doc 6 §6.4 | **RESOLVED: static IP for Phase 1** (DHCP is a BLFS addition). First boot is validated via HDMI+keyboard console, not SSH, specifically so a networking misconfiguration doesn't block seeing the login prompt (S9). | Resolved (default applied) |
+| D10 | Default system locale | Doc 6 §6.6 | **RESOLVED: `C.UTF-8`.** | Resolved (default applied) |
+| D11 | `/etc/fstab` + boot config: device-path vs. UUID/PARTUUID identification | Doc 7 §7.1, Doc 11 §5 | **RESOLVED: PARTUUID/UUID** — robust against the SD card ever being read as a different device node (e.g. `mmcblk0` vs. a USB-SD adapter's `sda`). | Resolved (default applied) |
 | D12 | Boot path: legacy BIOS GRUB vs. UEFI GRUB | Doc 7 §7.2/§7.3, **Doc 11 §5** | ~~Legacy BIOS~~ **RESOLVED 2026-10-06: neither — no GRUB at all. Raspberry Pi firmware boot (EEPROM + `config.txt` + device tree), per Document 11 §5.** | **Resolved** |
-| D13 | OS identity in `/etc/os-release` etc. (name, version, codename) | Doc 8 §8.1 | Rebrand to OWN-OS identity, not "Linux From Scratch" | **Needs sign-off** |
-| D14 | Post-boot dev workflow (chroot-back-in vs. SSH vs. native console) | Doc 8 §8.4 | Chroot-back-in first, SSH once available | **Needs sign-off** |
-| D15 | **OWN-OS's actual purpose** — workstation / server / embedded / other | Doc 8 §8.5 | Not pre-judged by this plan — highest-leverage open question | **Needs sign-off — blocks all of Phase 2** |
-| D16 | Ongoing security-advisory monitoring ownership | Doc 8 §8.6 | Assign explicitly, make recurring | **Needs sign-off** |
-| D17 | Checkpoint/backup storage location (ephemeral session risk) | Doc 9 §9.3 | Export outside the build container, not just local disk | **Needs sign-off** |
+| D13 | OS identity in `/etc/os-release` etc. (name, version, codename) | Doc 8 §8.1 | **RESOLVED 2026-10-06 by the project owner: name is "Ravya OS".** `NAME="Ravya OS"`, `ID=ravya`, `PRETTY_NAME="Ravya OS 1.0"` (version/codename scheme to be finalized at Document 08 execution time, but the name itself is locked). | **Resolved** |
+| D14 | Post-boot dev workflow | Doc 8 §8.4, Doc 10 §10.2 M9 | **RESOLVED: HDMI+keyboard console for first boot/validation; SSH once static networking is confirmed working.** No chroot-back-in option exists under the cross-build methodology (D20). | Resolved (default applied) |
+| D15 | **OWN-OS's actual purpose** — workstation / server / embedded / other | Doc 8 §8.5 | Still not pre-judged — highest-leverage open question, but does not block Phase 1 technical execution | **Needs sign-off — blocks all of Phase 2, not Phase 1** |
+| D16 | Ongoing security-advisory monitoring ownership | Doc 8 §8.6 | **RESOLVED: project owner (solo, per Document 06 A1), recurring — mechanism (e.g. a scheduled check-in) to be set up at Stage 9.** | Resolved (default applied) |
+| D17 | Checkpoint/backup storage location (ephemeral session risk) | Doc 9 §9.3 | **RESOLVED: periodic compressed checkpoints, sent to the project owner as downloadable files from this session at natural break points (not just kept on the container's local disk), so a session loss doesn't mean a full restart.** | Resolved (default applied) |
 | D18 | Test-suite scope (big-three only vs. every package from Ch. 7 on) | Doc 9 §9.1, **Doc 11 §6** | ~~Every package from Ch. 7 onward~~ **RESOLVED 2026-10-06: deferred for the entire build — full cross-compilation (D20) means nothing executes natively on the build host at all. Test suites become meaningful only after first boot on the real Pi. See Document 11 §6.** | **Resolved (deferred)** |
 | D19 | Raspberry Pi kernel source: mainline `kernel.org` vs. Raspberry Pi Foundation's downstream fork | **Doc 11 §4** | **RESOLVED 2026-10-06: mainline `kernel.org`, consistent with the existing package list. Accepted trade-off: incomplete camera/GPU-acceleration/some-peripheral support, irrelevant to Phase 1's login-prompt goal.** | **Resolved** |
 | D20 | Build methodology for a cross-architecture target: LFS's own "Cross Edition" (boot temp system on real Pi, finish natively there) vs. full cross-compilation throughout (PiCLFS-shaped) | **Doc 11 §1** | **RESOLVED 2026-10-06: full cross-compilation throughout, to match the already-chosen "build it here, you boot the result" model. Explicit trade-off accepted: departs further from the stock LFS book than the original x86_64 plan.** | **Resolved** |

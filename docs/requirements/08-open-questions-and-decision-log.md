@@ -48,6 +48,25 @@ folders simultaneously.
 
 ## Decision log
 
+**2026-10-06 — OS name confirmed: "Ravya OS".** Resolves `docs/phase1`
+**D13**. Will appear in `/etc/os-release` (`NAME="Ravya OS"`,
+`ID=ravya`) and the login banner once Stage 7 (identity & final
+review) runs.
+
+**2026-10-06 — Remaining low-stakes Stage-0 decisions (D2–D11, D14,
+D16, D17) resolved by applying this plan's own recommended defaults**,
+reviewed and accepted rather than individually deliberated: continuous
+build with periodic exported checkpoints (D2, D17), ~6 GB image on the
+confirmed 32 GB SD card (D3), `-j4` (D4), no stripping (D5), no package
+manager for Phase 1 (D6), SysVinit (D7), persistent network naming
+(D8), static IP with HDMI-console-first validation (D9), `C.UTF-8`
+(D10), PARTUUID-based disk identification (D11), HDMI-then-SSH
+post-boot workflow (D14), project owner as the recurring
+security-monitoring owner (D16). Full detail and rationale in
+`docs/phase1/10-roadmap-and-open-decisions.md` §10.1. **D15/Q15
+(OWN-OS's purpose) and Q1–Q3 remain open — explicitly, since they gate
+Phase 2 decisions, not anything Phase 1 execution needs.**
+
 **2026-10-06 — Target hardware confirmed: Raspberry Pi 4 or 5
 (`aarch64`), not x86_64.** Resolves `docs/phase1` **D1**. Build happens
 via full cross-compilation in the cloud build session; the Pi is
