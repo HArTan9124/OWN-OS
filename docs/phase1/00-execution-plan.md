@@ -411,7 +411,22 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   CPython's own documented mechanism) to install `pip` into
   `$OWNOS_ROOT` without ever executing the aarch64 `python3` binary.
   Verified `python3.13` in the staging rootfs is genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~42 packages) — in progress,
+- [x] Flit-core 3.12.0, Packaging 25.0, Wheel 0.46.1, Setuptools
+  80.9.0, MarkupSafe 3.0.2, Jinja2 3.1.6 — installed. Approach: use
+  the *native* build Python (from the Python two-pass recipe above) to
+  run `pip`/build backends, since nothing cross-compiled can execute
+  here, with `pip install --target=<target site-packages>` to place
+  files directly into `$OWNOS_ROOT`'s Python installation. The four
+  pure-Python bootstrap packages needed no special handling (just
+  copying files). MarkupSafe has a genuine C extension
+  (`_speedups`) and needed the same cross-build environment variables
+  CPython's own `make install install-ensurepip` already uses
+  internally (`_PYTHON_HOST_PLATFORM=linux-aarch64`,
+  `_PYTHON_SYSCONFIGDATA_NAME=...`, plus `CC`/`CXX`/`AR`/`LDSHARED` set
+  to the cross-toolchain) — verified the resulting `_speedups.so` is
+  genuine aarch64. This is the general recipe for any further
+  C-extension Python package this build needs.
+- [ ] Remaining Chapter 8 package list (~36 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
