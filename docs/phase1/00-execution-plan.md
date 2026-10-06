@@ -503,7 +503,12 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   Verified `mke2fs` is genuine aarch64.
 - [x] Procps-ng 4.0.5 — built, installed after the ncurses.pc fix
   (Document 11 §3.17). Verified `ps`/`top` are genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~14 packages) — in progress,
+- [ ] Man-DB 2.13.1 — building. Needed `apt-get install groff-base`
+  on the build host for `soelim`/`tbl`, used to typeset one optional
+  admin manual document (`man_db.pp`) at build time — unrelated to
+  the cross-compiled aarch64 `groff` already installed into
+  `$OWNOS_ROOT` (can't execute here).
+- [ ] Remaining Chapter 8 package list (~13 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
