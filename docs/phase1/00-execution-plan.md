@@ -55,7 +55,7 @@ layer on top of them — **start here when it's time to actually build**.
 | 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ☑ Done for Phase 1 purposes (2026-10-06) — D1–D14, D16–D20 resolved; **D15/Q15 (purpose) and Q1–Q3 deliberately deferred — they gate Phase 2, not Phase 1 execution** |
 | 1 | Host environment & partitioning (image-file, not real partition — Doc 11 §1) | M1 | D1–D4 | S2 | ◐ In progress — host toolchain verified 2026-10-06 |
 | 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ☑ Done (2026-10-06) — 81/84 packages (530 MB) + Pi firmware; Binutils/GCC/Glibc checksum-verified. Ninja/Systemd/Vim deferred (not needed until later) |
-| 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☐ Not started |
+| 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☑ Done (2026-10-06) — Binutils, GCC (C+C++), Linux headers, Glibc, libstdc++ all cross-built and verified; two real bugs found & fixed, see Doc 11 §3.1 |
 | 4 | **Full cross-build, no chroot** (replaces "temp tools + chroot entry" — Doc 11 §1/§3) | M4 | D17, D20 | S5 | ☐ Not started |
 | 5 | System configuration (unaffected by arch — applied directly, no chroot) | M5 | D7–D10 | S7 | ☐ Not started |
 | 6 | **Image assembly** (replaces "bootable system"/GRUB — Doc 11 §5) | M6 | D11, D19 | S8 | ☐ Not started |
@@ -229,25 +229,40 @@ they weren't in the original plan:**
 
 **Gate:** D4 (parallel job count) resolved (feeds `MAKEFLAGS`).
 
-**Tasks:**
-- [ ] Minimal FHS layout (`etc`, `var`, `usr/{bin,lib,sbin}`,
-  `lib64` symlink logic, `tools`); confirm `/usr/lib64` does **not**
-  exist (§4.1 step 1).
-- [ ] Create the `lfs` user/group, set ownership of `$LFS` subtrees
-  (§4.1 step 2).
-- [ ] Write `~/.bash_profile` and `~/.bashrc` for `lfs` exactly as
-  specified (clean-room env, `LFS_TGT`, `PATH` ordering,
-  `CONFIG_SITE`, `MAKEFLAGS=-j<D4 value>`); neutralize host
-  `/etc/bash.bashrc` if present (§4.1 step 3).
-- [ ] **As `lfs`, never `root`:** build, in order — Binutils pass 1 →
-  GCC pass 1 → Linux API headers → Glibc → libstdc++ (§4.3).
-- [ ] Time the Binutils pass-1 build specifically (wrap in `time { }`)
-  to establish the project's SBU baseline
-  (`docs/phase1/09-testing-validation-and-risk.md` §9.2) — this feeds
-  every later time estimate.
+**Tasks — all done 2026-10-06, adapted per Document 11 (no `lfs` user,
+no chroot; `$OWNOS_TOOLS`=`/build/tools`, `$OWNOS_ROOT`=`/build/root`):**
+- [x] Minimal FHS layout created directly in `$OWNOS_ROOT` (§4.1 step 1
+  equivalent); `/usr/lib64` confirmed absent — **required two fix
+  passes**, see Document 11 §3.1 Bug 2 (aarch64's own `t-aarch64-linux`
+  defaults to `lib64` just like x86_64's `t-linux64`; the GCC source
+  patch must be applied **before GCC pass 1 is first configured**, not
+  after — it's baked into the compiler at its own build time).
+- [x] Build environment set via `/build/env.sh` (sourced per shell,
+  since this session's shells don't persist state) instead of
+  `.bash_profile`/`.bashrc` — no `lfs` user needed since nothing here
+  risks damaging a shared host (§4.1 steps 2–3 equivalent).
+- [x] Built, in order — Binutils 2.45 → GCC 15.2.0 pass 1 (C+C++) →
+  Linux 6.16.1 API headers (`ARCH=arm64`, a real adaptation — the book's
+  plain `make headers` assumes same-arch) → Glibc 2.42 → libstdc++
+  (§4.3). **libstdc++ required a second fix pass** — see Document 11
+  §3.1 Bug 1 (the book's `--with-gxx-include-dir` sysroot trick assumes
+  `$LFS/tools` nested inside `$LFS`; our tools/root layout is sibling
+  directories, not nested, so headers must install directly under
+  `$OWNOS_TOOLS`, not via `DESTDIR`-sysroot-prefixing).
+- [x] SBU baseline: Binutils pass 1 built in **1m15s on 4 cores** —
+  fast relative to the book's 1-core baseline convention, as expected
+  given this session's hardware; not directly comparable to published
+  book SBU figures, logged here as this project's own reference point.
+- [x] All five sanity checks from the book's Glibc page run and passed:
+  correct interpreter (`/lib/ld-linux-aarch64.so.1`), no build-path
+  leakage into the compiled binary, correct header/linker search paths,
+  correct `libc.so.6` resolution. A full `#include <iostream>` program
+  compiled, linked, and produced a valid ARM64 PIE executable.
 
-**Acceptance (S4):** `$LFS/tools` contains a working cross-toolchain
-targeting `$LFS_TGT`; SBU baseline recorded.
+**Acceptance (S4) — met:** `$OWNOS_TOOLS` contains a working
+`aarch64-unknown-linux-gnu` cross-toolchain (C and C++); `$OWNOS_ROOT`
+has Glibc and libstdc++ correctly installed under `usr/lib` with no
+`lib64` split; SBU baseline recorded.
 
 ---
 
