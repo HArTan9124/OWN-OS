@@ -328,9 +328,17 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
 - [ ] Remaining Chapter 8 package list (~63 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
-- [ ] FHS tree + essential files (`/etc/passwd`, `/etc/group`,
-  `/etc/hosts`, `/etc/mtab`, log files) created directly in
-  `$OWNOS_ROOT`.
+- [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
+  symlink, `/etc/hosts`, `/etc/passwd`, `/etc/group` (book's §7.6
+  content verbatim), plus hand-written `/etc/shadow`/`/etc/gshadow`
+  (book's chroot-based `pwconv`/`passwd root` steps can't run here —
+  every account's password field is `!`, i.e. locked; **root has no
+  password set yet, must be done in Stage 7 before first boot**), and
+  the log files (`btmp`/`lastlog`/`faillog`/`wtmp`) with book-correct
+  permissions.
+- [ ] Remaining FHS tree directories not yet created by any package
+  install (`/root`, `/home`, `/srv`, `/media`, etc. — audit once the
+  package list is done rather than piecemeal).
 - [ ] Cleanup (`/usr/share/{info,man,doc}`, stray `.la` files) and a
   checkpoint export at the close of this stage.
 
