@@ -364,7 +364,8 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   book's `chmod 0755 /usr/lib/preloadable_libintl.so` post-install fix.
 - [x] Bash 5.3 (with `/bin/sh` symlink), Libtool 2.5.4, GDBM 1.26,
   Gperf 3.3 — built, installed. All plain cross-compiler, no issues.
-- [ ] Remaining Chapter 8 package list (~54 packages) — in progress,
+- [x] Expat 2.7.1 — built, installed, no issues.
+- [ ] Remaining Chapter 8 package list (~53 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
