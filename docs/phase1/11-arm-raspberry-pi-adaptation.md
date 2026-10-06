@@ -613,6 +613,23 @@ library directly instead of hitting this missing symlink — none has
 so far, but Util-linux is the first package in build order to want
 `-ltinfo` by name.
 
+### 3.17 Ncurses never got pkgconfig files either
+
+Same root cause as §3.16 (Ncurses's post-install steps weren't fully
+applied when it was built early in Stage 4): Procps-ng's `configure`
+relies *entirely* on `PKG_CHECK_MODULES` for ncursesw, with no
+library-only fallback, and failed outright since no
+`ncursesw.pc`/`ncurses.pc` existed anywhere under
+`$OWNOS_ROOT/usr/lib/pkgconfig`. Fixed by hand-writing a minimal
+`ncursesw.pc` (prefix/libdir/includedir plus `-lncursesw` /
+`-I${includedir}`) and symlinking `ncurses.pc` to it — equivalent to
+what Ncurses's own `--enable-pc-files` configure flag would have
+produced. **Worth a dedicated pass once the package list is done**:
+go back over the Stage-3/early-Stage-4 packages (Ncurses especially)
+and diff what was actually done against the book's full post-install
+section, rather than finding each missing step reactively via a
+later package's build failure.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
