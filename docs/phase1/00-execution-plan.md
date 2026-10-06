@@ -496,7 +496,12 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   `libtinfo` symlink bug (Document 11 §3.16, retroactively fixed) when
   `ul` failed to link. Verified `mount`/`lsblk`/etc. are genuine
   aarch64.
-- [ ] Remaining Chapter 8 package list (~16 packages) — in progress,
+- [x] E2fsprogs 1.47.3 — built, installed with `--disable-libblkid
+  --disable-libuuid --disable-uuidd --disable-fsck` (Util-linux
+  already owns `libblkid`/`libuuid`/the generic `fsck` dispatcher —
+  avoids duplicate ownership of the same library/binary names).
+  Verified `mke2fs` is genuine aarch64.
+- [ ] Remaining Chapter 8 package list (~15 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
