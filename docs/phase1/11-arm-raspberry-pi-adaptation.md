@@ -436,6 +436,57 @@ Chapter 6's GCC pass 2, which this methodology skips entirely, and
 Chapter 8's own GCC page never recreates it since it assumes Chapter 6
 already did.
 
+### 3.10 Perl needs a third-party tool: stock `Configure -Dusecrosscompile` isn't viable
+
+Perl uses its own `Configure` script (metaconfig-based, not autoconf),
+and its built-in cross-compile mode (`-Dusecrosscompile`) is designed
+around having a *live, reachable target device* (via ssh or `adb`) that
+it copies small test programs to and runs during the build — not a true
+offline cross-compile. It's widely reported as fragile even with a
+device present, and both Buildroot and Yocto deliberately avoid it.
+Since this methodology has no target device available during the build
+(the Pi is touched only once, at the very end, to flash the finished
+image — Document 11 §1), stock `Configure` was never going to work here.
+
+**Used the third-party `perl-cross` project** (github.com/arsv/perl-cross,
+reachable as a GitHub *release* tarball — `codeload.github.com`'s
+source-archive links remain blocked, but `releases/download/` assets
+are not, consistent with every other GitHub-hosted package in this
+build) instead. It replaces Perl's top-level `Makefile`/`Configure`
+flow entirely with its own `configure` + curated per-version patch sets,
+builds a proper native miniperl for the host internally (for the code
+generation Perl's build needs), and never executes a target binary.
+
+One version-compatibility snag: perl-cross 1.6.1's newest known patchset
+is `perl5-5.41.8` (a development release); our pinned `5.42.0` (the
+following stable) has no matching directory under `cnf/diffs/`, and
+`configure` hard-exits rather than proceeding without one. Given
+5.41.8 → 5.42.0 is exactly one release transition (odd-to-next-even is
+LFS's/Perl's own stable-release convention) and perl-cross's own check
+is explicitly just "does a directory exist," **copied the 5.41.8
+patchset to a new `perl5-5.42.0` directory** rather than disabling the
+check outright — this is a deliberate, logged version-compatibility
+assumption (not a silent hack), to be revisited if anything downstream
+of Perl misbehaves. One of the borrowed patches (`liblist.patch`,
+which teaches `ExtUtils::MakeMaker` about perl-cross's `usemmldlt`
+linker-detection config variable) partially failed to apply — its
+second hunk (adding the new `_ld_ext` subroutine) applied cleanly, but
+the first hunk's context (the `sub ext { ... }` dispatcher) had
+drifted between 5.41.8 and 5.42.0 (upstream changed `return &_foo_ext`
+to `goto &_foo_ext` for all branches in the interim). Applied the
+equivalent change by hand against the current syntax, confirmed
+`_ld_ext` already existed from the successful hunk, then
+`touch`ed the `.applied` marker perl-cross's `make crosspatch` checks
+for and resumed the build.
+
+Configured with `./configure --target=$OWNOS_TGT
+--target-tools-prefix=${OWNOS_TGT}- --sysroot=$OWNOS_ROOT --prefix=/usr
+--host-cc=gcc` — `--target-tools-prefix` points it at the Stage-3
+cross-toolchain for the target build, `--host-cc=gcc` is the native
+host compiler for miniperl, and `--sysroot` is required so Perl's own
+`Configure`-style header/library probes look in `$OWNOS_ROOT` rather
+than the x86_64 host's own `/usr`.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
