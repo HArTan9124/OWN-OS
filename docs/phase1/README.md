@@ -11,10 +11,18 @@ entire LFS stable book into an actionable, OWN-OS-specific plan: what we
 build, in what order, on what host, with which decisions explicitly called
 out for sign-off before we touch a compiler.
 
+**Ready to actually build?** Start at
+[00-execution-plan.md](./00-execution-plan.md) instead of reading
+top to bottom — it's the single sequenced, checkbox-driven plan that
+combines this folder with `docs/requirements/` (gates, requirement IDs,
+success criteria) into 10 ordered stages. Documents `01`–`10` below are
+its reference material, not a separate path to follow.
+
 ## Reading order
 
 | # | Document | Covers |
 |---|----------|--------|
+| 0 | [00-execution-plan.md](./00-execution-plan.md) | **The actionable plan** — 10 sequential stages combining this folder with `docs/requirements/`, with gates, task checklists, and acceptance criteria |
 | 1 | [01-overview-and-methodology.md](./01-overview-and-methodology.md) | Why LFS, what "from scratch" means, the 4-stage build model, how this maps to OWN-OS phases |
 | 2 | [02-host-environment-and-partitioning.md](./02-host-environment-and-partitioning.md) | Host system requirements, disk partitioning, filesystem, `$LFS`/umask, staged-build rules |
 | 3 | [03-sources-and-packages.md](./03-sources-and-packages.md) | Full package & patch inventory, versions, acquisition/verification plan |

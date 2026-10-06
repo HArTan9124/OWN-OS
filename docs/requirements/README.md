@@ -14,6 +14,12 @@ and that table's answers (especially D15, OWN-OS's purpose) feed back
 into the PRD here. They are two halves of one plan, not two separate
 projects.
 
+**The two halves are combined into one actionable plan at**
+[`docs/phase1/00-execution-plan.md`](../phase1/00-execution-plan.md) —
+10 sequential, gated stages. That is where to go once this folder's
+open questions are resolved; the documents below are its reference
+material.
+
 ## Contents
 
 | # | Document | Answers |
