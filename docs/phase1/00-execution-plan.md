@@ -513,7 +513,14 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   real binaries (`man`/`whatis`/`mandb`/etc.) all built and installed
   correctly regardless. Verified `man`/`whatis`/`mandb` are genuine
   aarch64.
-- [ ] Remaining Chapter 8 package list (~12 packages) — in progress,
+- [x] Sysklogd 2.7.2, **SysVinit** 3.14 (with the mandatory
+  consolidated patch) — built, installed with no issues beyond the
+  plain `CC="${OWNOS_TGT}-gcc"` override on `make`'s command line
+  (SysVinit has no autoconf layer at all, just a hand-written
+  Makefile relying on `make`'s implicit `CC`). **Verified `/sbin/init`
+  — the PID-1 binary the Pi's kernel will exec at boot — is genuine
+  aarch64.**
+- [ ] Remaining Chapter 8 package list (~10 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
