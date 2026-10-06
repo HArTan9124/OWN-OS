@@ -352,7 +352,14 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   created `/usr/bin/cc` → `gcc` — a symlink stock LFS creates back in
   the skipped Chapter 6, never produced by Chapter 8's GCC page on its
   own.
-- [ ] Remaining Chapter 8 package list (~63 packages) — in progress,
+- [x] Sed 4.9, Psmisc 23.7 — built, installed. Psmisc's `pstree.c`
+  assumes C23's built-in `bool`/`true`/`false` keywords (no
+  `<stdbool.h>` include) and fails under the `-std=gnu17` override from
+  §3.7 — **the `-std=gnu17` fix isn't universally safe**, so the default
+  going forward is the plain cross-compiler (`${OWNOS_TGT}-gcc`, no
+  `-std=` override), falling back to `$OWNOS_CC`'s `-std=gnu17` only
+  when a package specifically hits the old-K&R-code failure pattern.
+- [ ] Remaining Chapter 8 package list (~61 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`

@@ -333,11 +333,23 @@ every subsequent `./configure` invocation passes `CC="$OWNOS_CC"`
 explicitly. `gnu17` is a close superset of the C89/C99/C11 dialects most
 LFS-era configure scripts and package code assume, pulls old-style
 function definitions back down to a warning, and isn't expected to break
-anything that doesn't specifically need `gnu23`-only features. Apply
-`CC="$OWNOS_CC"` to every remaining package's configure call going
-forward — this is exactly the kind of "silent toolchain-version drift"
-problem Document 10/11 already expected from using a much newer GCC
-(15.2.0) than the book was written against.
+anything that doesn't specifically need `gnu23`-only features. This is
+exactly the kind of "silent toolchain-version drift" problem Document
+10/11 already expected from using a much newer GCC (15.2.0) than the
+book was written against.
+
+**Revised, not universal**: Psmisc's `pstree.c` turned out to depend on
+the *opposite* side of the same drift — it uses C23's built-in
+`bool`/`true`/`false` keywords without including `<stdbool.h>`, and
+fails to compile *under* `-std=gnu17` with `'false' undeclared`. So
+`$OWNOS_CC` is not a safe default for every package after all. Revised
+policy: try the plain cross-compiler (`${OWNOS_TGT}-gcc`, GCC's own
+`gnu23` default) first; fall back to `$OWNOS_CC`'s `-std=gnu17` only
+for a package that specifically hits GMP's old-K&R-code failure
+pattern (an unprototyped function call rejected as a hard error).
+Expect to keep hitting both directions of this as the remaining
+package list is worked through — there is no one `-std=` that is
+correct for all of it.
 
 ### 3.8 MPFR's decimal-float support needs an explicit runtime that isn't there
 
