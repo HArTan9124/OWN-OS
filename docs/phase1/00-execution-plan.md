@@ -437,7 +437,13 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   source-header fix (Document 11 §3.13) rather than a config.h edit or
   full `autoreconf`/gnulib-bootstrap. `chroot` moved to `/usr/sbin`
   per the book. Verified `ls`/`cp`/`chroot`/etc. are genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~27 packages) — in progress,
+- [x] Kbd 2.8.0 (with the mandatory backspace patch, data-only, no
+  autoreconf needed), Libpipeline 1.5.8 — built, installed.
+- [ ] IPRoute2 6.16.0 — building; needed `CC="${OWNOS_TGT}-gcc"`
+  passed explicitly to its own shell-script `configure` (which
+  defaults to probing the *host's* compiler/libc otherwise, giving
+  inaccurate feature results for the target).
+- [ ] Remaining Chapter 8 package list (~24 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
