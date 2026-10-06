@@ -439,11 +439,19 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   per the book. Verified `ls`/`cp`/`chroot`/etc. are genuine aarch64.
 - [x] Kbd 2.8.0 (with the mandatory backspace patch, data-only, no
   autoreconf needed), Libpipeline 1.5.8 — built, installed.
-- [ ] IPRoute2 6.16.0 — building; needed `CC="${OWNOS_TGT}-gcc"`
-  passed explicitly to its own shell-script `configure` (which
-  defaults to probing the *host's* compiler/libc otherwise, giving
-  inaccurate feature results for the target).
-- [ ] Remaining Chapter 8 package list (~24 packages) — in progress,
+- [x] IPRoute2 6.16.0 — built, installed. Needed
+  `CC="${OWNOS_TGT}-gcc"` passed explicitly to its own shell-script
+  `configure` (defaults to the host's compiler otherwise). Also hit
+  the self-execution-during-build pattern again: `netem/`'s four
+  table-generator helpers (`maketable`/`normal`/`pareto`/
+  `paretonormal`) are run directly during the build to produce
+  architecture-independent probability-distribution data files — its
+  Makefile already has first-class `HOSTCC` support for exactly this
+  (`HOSTCC ?= $(CC)`), just needed `HOSTCC=gcc` passed on the `make`
+  command line alongside the cross `CC=`. Verified `tc`/`ip` are
+  aarch64 while the `netem` generators stayed native x86_64, as
+  intended.
+- [ ] Remaining Chapter 8 package list (~23 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
