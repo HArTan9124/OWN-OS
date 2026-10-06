@@ -391,7 +391,13 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   `--build` are irrelevant; installed scripts' shebangs correctly
   resolve to the target's own `/usr/bin/perl` (built earlier this
   stage), confirmed by inspection.
-- [ ] Remaining Chapter 8 package list (~46 packages) — in progress,
+- [x] OpenSSL 3.5.2, Libelf 0.193 (from Elfutils, library only — needed
+  building `lib/` first, undocumented on the book's page since stock
+  LFS's `make` without a target builds everything including `lib/` as
+  a side effect), Libffi 3.5.2 — built, installed. OpenSSL's own
+  `Configure` recognized `linux-aarch64` plus `--cross-compile-prefix=`
+  directly, no adaptation needed beyond that.
+- [ ] Remaining Chapter 8 package list (~43 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
