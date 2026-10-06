@@ -273,6 +273,46 @@ just built" step). Autoconf-only packages are safe by construction; hand-
 rolled Makefiles and anything with a `gen/`-style code-generation step are
 not and need a case-by-case check.
 
+### 3.5 Second methodology simplification: Tcl, Expect, DejaGNU dropped entirely (2026-10-06)
+
+The book states this outright on the Tcl page: "This package and the next
+two (Expect and DejaGNU) are installed to support running the test suites
+for Binutils, GCC and other packages" — confirmed by also reading
+Expect's and DejaGNU's own pages, neither of which names any other
+LFS-internal consumer. Since D18 (already resolved: test suites are
+deferred entirely to post-boot validation on the real Pi, because a
+cross-compiled aarch64 binary cannot execute on this x86_64 build host to
+run its own `make check`), these three packages have no purpose in this
+build — nothing in this methodology will ever invoke `tclsh`, `expect`,
+or `runtest`. **Dropped from the Stage 4 package list, same reasoning as
+the Chapter 6 skip (§3.2).** Pkgconf is unaffected and still required —
+it is a general build-time library-flag lookup tool used by other
+packages' configure scripts, unrelated to testing.
+
+### 3.6 Pkgconf needs the same host/target split as File
+
+Pkgconf (2.5.1) itself is a normal autoconf cross-compile (no special
+handling needed to build the aarch64 copy installed into
+`$OWNOS_ROOT/usr/bin/pkgconf`, with a `pkg-config` compat symlink). But
+later packages' `./configure` scripts run *on this x86_64 host* and may
+call `pkg-config` at configure time to detect libraries — the aarch64
+`pkgconf` binary just built can't execute here, so a **separate, native**
+pkgconf is needed for the build itself. The build host already has one
+(`pkgconf`/`pkg-config` 1.8.1, from the base container image). Pointed it
+at the target sysroot instead of the host's own `.pc` files by exporting,
+in `/build/env.sh`:
+
+```sh
+export PKG_CONFIG_SYSROOT_DIR=$OWNOS_ROOT
+export PKG_CONFIG_LIBDIR=$OWNOS_ROOT/usr/lib/pkgconfig:$OWNOS_ROOT/usr/share/pkgconfig
+```
+
+(`PKG_CONFIG_PATH` deliberately left unset — setting it would additionally
+search the host's own `.pc` files, exactly what must be avoided.) Verified
+working: `pkg-config --cflags --libs zlib` now correctly returns
+`-I/build/root/usr/include -L/build/root/usr/lib -lz`, the sysroot-adjusted
+paths, not the host's.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still

@@ -296,10 +296,14 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   minimal bootable system; revisit only if a later package specifically
   needs `libncurses++`.
 - [x] Zlib 1.3.1, Bzip2 1.0.8, Xz 5.8.1, Lz4 1.10.0, Zstd 1.5.7,
-  Readline 8.3, Flex 2.6.4, File 5.46, Bc 7.0.3 — built, installed.
-  Three more non-autoconf/special-case cross-compile patterns found and
-  resolved, see Document 11 §3.4.
-- [ ] Remaining Chapter 8 package list (~76 packages) — in progress,
+  Readline 8.3, Flex 2.6.4, File 5.46, Bc 7.0.3, Pkgconf 2.5.1 — built,
+  installed. Three more non-autoconf/special-case cross-compile patterns
+  found and resolved, see Document 11 §3.4/§3.6.
+- [x] **Methodology simplification:** Tcl, Expect, DejaGNU dropped from
+  the package list entirely — confirmed via the book's own pages to be
+  pure test-suite dependencies, and D18 already defers all test suites.
+  See Document 11 §3.5.
+- [ ] Remaining Chapter 8 package list (~73 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [ ] FHS tree + essential files (`/etc/passwd`, `/etc/group`,
