@@ -313,6 +313,50 @@ working: `pkg-config --cflags --libs zlib` now correctly returns
 `-I/build/root/usr/include -L/build/root/usr/lib -lz`, the sysroot-adjusted
 paths, not the host's.
 
+### 3.7 GCC 15 defaults to `gnu23`: breaks old K&R-style configure-time test code
+
+Hit while cross-compiling GMP 6.3.0: its configure script's own "long
+long reliability" compile test uses a deliberately archaic, unprototyped
+function definition (`void g(){}`, called later with 6 arguments — valid,
+if undefined, under K&R/C89 rules). GCC 15 defaults its C dialect to
+`gnu23`, and C23 made calling a function with more arguments than its
+(implicit, empty) prototype declares a hard **error** instead of a
+warning — so this and similar old test snippets fail to compile at all,
+even though they're deliberately not "real" code, just probes. Not
+specific to cross-compiling — would also break building GMP's configure
+test natively, though nothing in this project has hit it outside a cross
+context yet.
+
+**Fixed globally**, not per-package: `/build/env.sh` now exports
+`OWNOS_CC="${OWNOS_TGT}-gcc -std=gnu17"` and `OWNOS_CXX` alongside it, and
+every subsequent `./configure` invocation passes `CC="$OWNOS_CC"`
+explicitly. `gnu17` is a close superset of the C89/C99/C11 dialects most
+LFS-era configure scripts and package code assume, pulls old-style
+function definitions back down to a warning, and isn't expected to break
+anything that doesn't specifically need `gnu23`-only features. Apply
+`CC="$OWNOS_CC"` to every remaining package's configure call going
+forward — this is exactly the kind of "silent toolchain-version drift"
+problem Document 10/11 already expected from using a much newer GCC
+(15.2.0) than the book was written against.
+
+### 3.8 MPFR's decimal-float support needs an explicit runtime that isn't there
+
+MPFR built fine, but linking anything against it (first hit: MPC's own
+configure-time link check) failed with undefined references to
+`__bid_*` symbols (`__bid_getd2`, `__bid_addtd3`, etc.) — MPFR's configure
+auto-detected GCC 15's `_Decimal64`/`_Decimal128` *language* support and
+enabled its optional decimal-float conversion functions
+(`--enable-decimal-float` is the default when the compiler claims
+support), but the matching *runtime* library (Intel's BID decimal
+floating-point implementation, normally bundled into `libgcc` only for
+targets that enable it, e.g. PowerPC/S390/x86 in distro-patched GCCs) was
+never built into this project's `libgcc` and isn't linked automatically.
+Decimal-float conversion is not something GCC's own build needs from
+MPFR. **Fixed** by explicitly passing `--disable-decimal-float` to
+MPFR's configure — not a workaround, the book doesn't use this feature
+either, and disabling it removes the dependency on a runtime piece this
+build doesn't have rather than trying to add one.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still

@@ -303,7 +303,14 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   the package list entirely — confirmed via the book's own pages to be
   pure test-suite dependencies, and D18 already defers all test suites.
   See Document 11 §3.5.
-- [ ] Remaining Chapter 8 package list (~73 packages) — in progress,
+- [x] Man-pages 6.15, Iana-Etc 20250807, GMP 6.3.0, MPFR 4.2.2 (built
+  with `--disable-decimal-float`), MPC 1.3.1 — built, installed. Found a
+  significant general-purpose fix: GCC 15 defaults to `gnu23`, which
+  breaks old K&R-style configure-time test code (hit in GMP's own
+  configure); fixed globally via `OWNOS_CC="...-gcc -std=gnu17"` in
+  `env.sh`, applied to every configure call from here on. See Document
+  11 §3.7/§3.8.
+- [ ] Remaining Chapter 8 package list (~68 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [ ] FHS tree + essential files (`/etc/passwd`, `/etc/group`,
