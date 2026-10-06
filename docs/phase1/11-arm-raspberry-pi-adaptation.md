@@ -357,6 +357,73 @@ MPFR's configure — not a workaround, the book doesn't use this feature
 either, and disabling it removes the dependency on a runtime piece this
 build doesn't have rather than trying to add one.
 
+### 3.9 Binutils-final and GCC-final: a genuine Canadian cross
+
+Unlike every other Chapter 8 package, Binutils and GCC's "final" builds
+are not meant to run on this x86_64 build host at all — the whole point
+is for the finished OS to have its own native compiler and assembler,
+meaning the resulting `gcc`/`ld`/etc. binaries must themselves *run on*
+aarch64 (the Pi). Since those binaries are still being produced *on*
+x86_64, this is specifically what GCC's own build system calls a
+**Canadian cross**: `build` (x86_64, where compilation happens) differs
+from `host` (aarch64, where the result runs), and `host == target`
+(aarch64, what the result itself compiles for) — distinct from Stage 3's
+pass-1 cross-compiler, where `build == host` (x86_64) and only `target`
+differs.
+
+Both builds used `--build=x86_64-pc-linux-gnu --host=$OWNOS_TGT
+--target=$OWNOS_TGT`, with `CC="$OWNOS_CC"` (Stage 3's pass-1 cross-
+compiler — needed here because *this* build's output must run on
+aarch64, exactly what pass 1 produces) and, for GCC specifically,
+`CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++` (the host's own native compiler,
+for the handful of GCC-internal code generators — `genattrtab` and
+friends — that must execute during the build itself, on x86_64, not on
+the eventual aarch64 host).
+
+Binutils-final needed nothing beyond the triplets — configure correctly
+auto-detected the pass-1 `aarch64-unknown-linux-gnu-gcc` via the standard
+`${host_alias}-gcc` naming convention, and the whole build/install
+matched the book's Chapter 8 flags verbatim otherwise.
+
+GCC-final needed one additional, important flag pair:
+`--with-sysroot=/ --with-build-sysroot=$OWNOS_ROOT`. These serve
+different purposes and are easy to conflate: `--with-sysroot` is the
+default sysroot path *baked into the resulting compiler*, used when it
+actually runs (on the Pi, where the real root is `/`, so this must be
+`/`, not `$OWNOS_ROOT`). `--with-build-sysroot` is a separate override
+used *only while GCC itself is being built right now*, so its own build
+process can still find the aarch64 headers/libraries it needs — without
+that path leaking into the installed compiler's permanent defaults.
+Using `--with-sysroot=$OWNOS_ROOT` alone (the pass-1 pattern) would have
+produced a GCC that only works correctly while still sitting inside this
+build container, not after being copied onto the Pi's own root
+filesystem. Verified via `strings`/`gcc`'s own `specs` file that the
+installed driver uses `--sysroot=%R` (the runtime-relative mechanism
+`--with-sysroot=/` produces), not a literal `$OWNOS_ROOT` path — the
+only verification possible, since nothing in this build environment can
+execute the resulting aarch64 binary directly.
+
+One operational snag, unrelated to the Canadian-cross mechanics: a first
+attempt's `build/` directory carried over a stale `config.cache` from
+earlier in the session (Stage 3's pass-1 GCC work), causing `configure:
+error: changes in the environment can compromise the build`. Traced to
+`mv olddir newdir` silently moving the *contents* of a fresh extraction
+**into** an already-existing `newdir` instead of replacing it, rather
+than any container/mount issue — `rm -rf` on the target name before
+`mv`, confirmed empty, is not sufficient if a *same-named* directory from
+an earlier, unrelated extraction still exists elsewhere in the rename
+path. Fixed by extracting to a distinctly-named directory
+(`gcc-final-15.2.0`) and explicitly confirming no `build/` subdirectory
+existed before configuring, rather than trusting `rm -rf` plus a rename.
+
+Both results installed cleanly into `$OWNOS_ROOT`; `file` confirms
+`gcc`, `g++`, `cc1`, `cc1plus`, `ld`, `readelf`, etc. are all genuine
+aarch64 PIE executables, not more x86_64-hosted cross-tools. `/usr/bin/cc`
+(a symlink to `gcc`) was created by hand — stock LFS creates it during
+Chapter 6's GCC pass 2, which this methodology skips entirely, and
+Chapter 8's own GCC page never recreates it since it assumes Chapter 6
+already did.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still

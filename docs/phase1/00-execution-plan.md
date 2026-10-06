@@ -326,14 +326,32 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   worked first try once Stage 3's pass-1 `aarch64-unknown-linux-gnu-gcc`
   was found automatically via the standard `${host_alias}-gcc`
   convention.
-- [ ] **GCC (final)** — next, same Canadian-cross shape as Binutils but
-  materially harder: GCC's own build needs some host-run code generators
-  that must execute on x86_64 (this build's `build`) while the compiler
-  itself must run on aarch64 (`host`/`target`), and the resulting
-  compiler's baked-in sysroot path must be `/` (correct once it's
-  running on the Pi's own real root), not `$OWNOS_ROOT` (this build's
-  staging path) — needs `--with-sysroot=/
-  --with-build-sysroot=$OWNOS_ROOT` to separate those two concerns.
+- [x] **GCC (final)** 15.2.0 — Canadian cross built and installed.
+  Same `--build=x86_64-... --host=--target=aarch64-...` shape as
+  Binutils-final, plus `--with-sysroot=/ --with-build-sysroot=$OWNOS_ROOT`
+  (bakes in `/` as the sysroot the compiler uses once it's running on
+  the Pi's real root, while still finding aarch64 headers/libs in
+  `$OWNOS_ROOT` *during this build*) and explicit
+  `CC_FOR_BUILD=gcc CXX_FOR_BUILD=g++` (native, for GCC's own
+  host-run code generators) alongside `CC="$OWNOS_CC"` (the Stage-3
+  cross-compiler, for everything that must itself run on aarch64).
+  Verified `cc1`/`cc1plus`/`gcc`/`g++` in `$OWNOS_ROOT` are genuine
+  aarch64 PIE executables, and that the installed driver's specs use
+  `--sysroot=%R` (the `--with-sysroot=/` runtime mechanism), not a
+  hardcoded `$OWNOS_ROOT` path — confirmed by inspection since nothing
+  here can execute the binary to check directly. libgcc/libstdc++ were
+  rebuilt fresh by this build (replacing Stage 3's copies with the full
+  Chapter-8-equivalent versions). Hit one real snag along the way:
+  **a stale `build/` directory with an old config.cache survived two
+  rounds of `rm -rf` + re-extraction** (traced to a `mv` silently
+  moving a fresh extraction *into* an existing same-named directory
+  instead of replacing it, rather than any container/mount bug) —
+  resolved by extracting to a distinctly-named directory
+  (`gcc-final-15.2.0`, not reusing `gcc-15.2.0-final`) and confirming
+  no `build/` subdirectory existed before configuring. Also manually
+  created `/usr/bin/cc` → `gcc` — a symlink stock LFS creates back in
+  the skipped Chapter 6, never produced by Chapter 8's GCC page on its
+  own.
 - [ ] Remaining Chapter 8 package list (~63 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
