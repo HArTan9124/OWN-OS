@@ -487,6 +487,29 @@ host compiler for miniperl, and `--sysroot` is required so Perl's own
 `Configure`-style header/library probes look in `$OWNOS_ROOT` rather
 than the x86_64 host's own `/usr`.
 
+### 3.11 Native-helper builds must unset the global pkg-config sysroot redirect
+
+`/build/env.sh` globally exports `PKG_CONFIG_SYSROOT_DIR=$OWNOS_ROOT`
+and `PKG_CONFIG_LIBDIR=...` (§3.6) so the host's native `pkgconf`
+resolves the *target* sysroot's `.pc` files when cross-compiling —
+correct for every `--host=$OWNOS_TGT` package built so far. It is
+**wrong** for a native-helper build (a package built for and run on
+this x86_64 host itself, like File's native helper in §3.4 or Python's
+"build Python" pass below): pkg-config then reports the *aarch64*
+sysroot's include/lib paths for libraries like zlib, which `configure`
+bakes into that native build's own `CPPFLAGS`/`LDFLAGS` — producing a
+supposedly-native x86_64 build whose compiler is fed aarch64-only
+headers (`__vpcs`/`aarch64_vector_pcs` attributes, etc.), which it
+chokes on. Caught concretely while configuring Python's native "build
+Python" pass (§3.12) — `configure` ran with the redirect active and
+produced a contaminated `Makefile` before `make` ever ran, so the fix
+had to be a `make distclean` and a clean reconfigure, not just an
+environment fix for the next command. **Policy going forward: `unset
+PKG_CONFIG_SYSROOT_DIR PKG_CONFIG_LIBDIR PKG_CONFIG_PATH` before
+configuring any native-helper build**, and confirm with `grep -n
+PKG_CONFIG Makefile` after configuring that no `/build/root` path
+leaked in before running `make`.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
