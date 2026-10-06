@@ -379,7 +379,19 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   HAS_FDOPENDIR` line instead of `#define HAS_FDOPENDIR` in generated
   headers) in Document 11 §3.10. Verified the final `perl` binary is
   genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~50 packages) — in progress,
+- [x] **Methodology simplification:** XML::Parser and Intltool dropped
+  from the package list. Confirmed via the book's own pages that
+  neither has any documented runtime role (one is a Perl/Expat XML
+  binding, the other a build-time i18n string-extraction tool) and
+  neither is named as a hard dependency anywhere else in Chapter 8 —
+  consistent with the Tcl/Expect/DejaGNU precedent (§3.5), deferred to
+  Phase 2/BLFS scope rather than built now.
+- [x] Autoconf 2.72, Automake 1.18.1 — built, installed. Both are pure
+  Perl/shell script packages (no C compilation at all), so `--host`/
+  `--build` are irrelevant; installed scripts' shebangs correctly
+  resolve to the target's own `/usr/bin/perl` (built earlier this
+  stage), confirmed by inspection.
+- [ ] Remaining Chapter 8 package list (~46 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
