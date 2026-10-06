@@ -471,8 +471,18 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   (`depmod`/`insmod`/`lsmod`/`modinfo`/`modprobe`/`rmmod`) created by
   hand in both `/usr/bin` and `/usr/sbin` — not produced by `make
   install` on their own.
-- [ ] Groff 1.23.0 — building.
-- [ ] Remaining Chapter 8 package list (~19 packages) — in progress,
+- [x] Groff 1.23.0 — built, installed. All core binaries
+  (`groff`/`troff`/`grops`/etc.) cross-compiled cleanly; the build
+  then tried to use the just-built (aarch64) `groff` to typeset its
+  own sample/example documentation (`doc/*.ps`, `contrib/hdtbl/
+  examples/*.ps`, etc. — ~19 files, cosmetic only, not needed for a
+  working system) and failed with `Exec format error` for each.
+  Fixed with `make -k` (push through everything buildable) plus
+  future-dated (`touch -d 2035-01-01`) empty stub files for every
+  failing target, so `make`'s dependency check treats them as already
+  up to date and skips regenerating them — `install` then completed
+  cleanly. Verified `groff`/`troff` are genuine aarch64.
+- [ ] Remaining Chapter 8 package list (~18 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
