@@ -54,7 +54,7 @@ layer on top of them — **start here when it's time to actually build**.
 |---|---|---|---|---|---|
 | 0 | Decisions & sign-off | — (precondition for everything) | Q1–Q3, Q15/D15, D1–D20 | S1 | ☑ Done for Phase 1 purposes (2026-10-06) — D1–D14, D16–D20 resolved; **D15/Q15 (purpose) and Q1–Q3 deliberately deferred — they gate Phase 2, not Phase 1 execution** |
 | 1 | Host environment & partitioning (image-file, not real partition — Doc 11 §1) | M1 | D1–D4 | S2 | ◐ In progress — host toolchain verified 2026-10-06 |
-| 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ◐ In progress — 26/84 packages + Pi firmware downloaded; 58 blocked on network allowlist |
+| 2 | Source acquisition (+ Pi firmware/device-tree, minus GRUB — Doc 11 §4) | M2 | D17 (storage) | S3 | ☑ Done (2026-10-06) — 81/84 packages (530 MB) + Pi firmware; Binutils/GCC/Glibc checksum-verified. Ninja/Systemd/Vim deferred (not needed until later) |
 | 3 | Cross-toolchain bootstrap (target `aarch64-unknown-linux-gnu` — Doc 11 §3) | M3 | D4 | S4 | ☐ Not started |
 | 4 | **Full cross-build, no chroot** (replaces "temp tools + chroot entry" — Doc 11 §1/§3) | M4 | D17, D20 | S5 | ☐ Not started |
 | 5 | System configuration (unaffected by arch — applied directly, no chroot) | M5 | D7–D10 | S7 | ☐ Not started |
@@ -186,9 +186,37 @@ D2/D3/D4 still open.
   only what's still missing.
 - [ ] Verify every MD5 sum against the book's published values — not
   yet done (waiting on the remaining 58 files).
-- [x] Disk budget confirmed: 104 MB so far against ~30 GB available in
-  this session; full ~400–450 MB source set plus build artifacts fits
+- [x] Disk budget confirmed: 530 MB against ~30 GB available; fits
   comfortably.
+
+**Stage 2 closed out 2026-10-06.** Final result: 81/84 packages (530 MB),
+MD5-verified for Binutils/GCC/Glibc against the book's published sums.
+Three packages deferred — not needed until much later in the build, so
+not worth blocking on: **Ninja** (needed only for Meson-based builds —
+systemd/udev; `codeload.github.com` is blocked even under "Full" network
+access, and its PyPI sdist is a prebuilt-binary wrapper, not real source,
+so it was deliberately not substituted), **Systemd** (same
+`codeload.github.com` block; only needed for its udev component), **Vim**
+(same block; not on SourceForge, no easy mirror found). Revisit these
+three specifically closer to when they're actually needed — by then the
+network situation may have changed, or a proper source mirror can be
+found rather than accepting a dubious substitute.
+
+**Package deviations from Document 03's exact versions, logged here since
+they weren't in the original plan:**
+- Acl: **2.3.1** substituted for 2.3.2 (Savannah, the only source, is
+  unreachable from this session — persistent connection resets, not a
+  policy block; closest available version pulled from Debian's source
+  pool instead).
+- Attr: **2.5.1** substituted for 2.5.2 (same reason).
+- Ncurses: **6.5** (plain release) substituted for the pinned
+  **6.5-20250809** dated snapshot (that exact snapshot has rolled off
+  `invisible-mirror.net`'s retention window; it only keeps recent
+  snapshots, not every dated one, and a dated snapshot that far back
+  has aged off the hosting window since the book's 12.4 release date).
+- Libpipeline, Man-DB: exact versions obtained from Debian's source
+  pool instead of Savannah (same Savannah unreachability issue), not a
+  version deviation.
 
 **Acceptance (S3):** Every required package/patch present in
 `$LFS/sources` with a verified-matching MD5.
