@@ -582,6 +582,20 @@ already a complete, correctly-linked aarch64 `ninja` — confirmed by
 `file` — so it was installed directly, skipping the optimization-only
 second pass entirely.
 
+### 3.15 Vim and Systemd source: Debian's source package pool as a second fallback
+
+Same blocked-`codeload.github.com` problem as every other GitHub-hosted
+package whose only source link is an `archive/vX.Y.Z` tag (not a
+`releases/download/` asset) — this time for Vim and Systemd (needed
+only for Udev). Checked for release-asset tarballs first (neither
+project publishes one); fell back to **Debian's source package pool**
+(`deb.debian.org/debian/pool/main/...`), already used once before for
+Libpipeline, Man-DB and Acl/Attr's close-version substitutes. Found
+Vim `9.2.0858` (pinned: `9.1.1629`) and Systemd `257.13` (pinned:
+`257.8`) — both newer point/minor releases, logged as version
+deviations per the usual practice, not exact matches but close enough
+that a behavior-affecting regression is unlikely for either.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
