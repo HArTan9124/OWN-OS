@@ -362,7 +362,9 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
 - [x] Gettext 0.26, Bison 3.8.2, Grep 3.12 — built, installed (all
   plain cross-compiler, no `-std=` override needed). Gettext needed the
   book's `chmod 0755 /usr/lib/preloadable_libintl.so` post-install fix.
-- [ ] Remaining Chapter 8 package list (~58 packages) — in progress,
+- [x] Bash 5.3 (with `/bin/sh` symlink), Libtool 2.5.4, GDBM 1.26,
+  Gperf 3.3 — built, installed. All plain cross-compiler, no issues.
+- [ ] Remaining Chapter 8 package list (~54 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
