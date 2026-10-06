@@ -426,7 +426,13 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   to the cross-toolchain) — verified the resulting `_speedups.so` is
   genuine aarch64. This is the general recipe for any further
   C-extension Python package this build needs.
-- [ ] Remaining Chapter 8 package list (~36 packages) — in progress,
+- [x] Gzip 1.14, Make 4.4.1, Patch 2.8, Tar 1.35, Diffutils 3.12,
+  Findutils 4.10.0, Texinfo 7.2, Gawk 5.3.2 — built, installed. All
+  plain cross-compiler, no issues except Diffutils, which needed
+  `gl_cv_func_strcasecmp_works=yes` preset (gnulib's own test can't
+  run cross-compiled; glibc's strcasecmp is known-correct) — same
+  class of fix as Flex's malloc cache vars (§3.4).
+- [ ] Remaining Chapter 8 package list (~28 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
