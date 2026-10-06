@@ -465,7 +465,14 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   --target` doesn't generate console-script entry points (a real,
   general gap for every further Python CLI tool installed this way).
   See Document 11 §3.14.
-- [ ] Remaining Chapter 8 package list (~21 packages) — in progress,
+- [x] Kmod 34.2 — built, installed (correctly found aarch64
+  zstd/lzma/zlib/libcrypto via the sysroot; `--disable-manpages`
+  needed since `scdoc` isn't available). Classic tool symlinks
+  (`depmod`/`insmod`/`lsmod`/`modinfo`/`modprobe`/`rmmod`) created by
+  hand in both `/usr/bin` and `/usr/sbin` — not produced by `make
+  install` on their own.
+- [ ] Groff 1.23.0 — building.
+- [ ] Remaining Chapter 8 package list (~19 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
