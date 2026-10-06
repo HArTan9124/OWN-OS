@@ -197,6 +197,82 @@ the in-kernel loop attachment and mount were lost, not the data.
   sessions, the self-healing check only runs when this file is
   sourced, not automatically.
 
+### 3.4 Non-autoconf / self-hosting packages: three more cross-compile patterns found (2026-10-06)
+
+Most Chapter 8 packages are plain autoconf (`./configure --host=$OWNOS_TGT
+--build=...`) and need nothing beyond that flag. A few packages have their
+own build systems or run code they just built as part of building — those
+needed individual investigation. Found and resolved while building
+Bzip2/Flex/File/Bc:
+
+- **Bzip2** — hand-written `Makefile`/`Makefile-libbz2_so`, no autoconf at
+  all. `CC=/AR=/RANLIB=` passed as `make` command-line overrides (these
+  beat the Makefile's own `CC=gcc` line). The bigger trap: `make all`'s
+  default target chain ends in `test`, which runs the freshly built
+  (aarch64) `bzip2` binary directly — fails with `Exec format error` on
+  this x86_64 host. Fixed by building the specific named targets
+  (`libbz2.a bzip2 bzip2recover`) instead of `all`, never invoking `test`.
+  Same class of trap likely recurs for any package whose default `all`
+  target is wired to its own test suite rather than `make check` being a
+  separate opt-in target — check before assuming `make` alone is safe.
+- **Flex** — plain autoconf, but cross-compiling makes `AC_FUNC_MALLOC`/
+  `AC_FUNC_REALLOC` default their cache variables
+  (`ac_cv_func_malloc_0_nonnull`, `ac_cv_func_realloc_0_nonnull`) to `no`
+  (can't run a test program when cross-compiling, so autoconf assumes the
+  worst). That pulls in gnulib's `malloc.c`/`realloc.c` replacement shims,
+  which are written in obsolete K&R C (`void *malloc ();`) and fail to
+  compile against glibc 2.42's prototyped `<stdlib.h>` under GCC 15. Fixed
+  by exporting `ac_cv_func_malloc_0_nonnull=yes
+  ac_cv_func_realloc_0_nonnull=yes` before `configure` (glibc's malloc/
+  realloc are POSIX-conformant, so this is correct, not a hack). **This
+  same cache-variable trick is the general fix any time a cross-compiled
+  autoconf package pulls in a gnulib malloc/realloc replacement
+  unexpectedly** — worth checking for on later packages (Coreutils, Sed,
+  Grep, Bash, Gettext, Tar, etc. all use gnulib and could hit this).
+  Separately: flex is also used by other packages' build systems as a
+  *build-time* code generator (invoked on this x86_64 host while cross-
+  compiling something else). The aarch64 flex just built into
+  `$OWNOS_ROOT` can't run here, so a native x86_64 flex was installed via
+  `apt-get install flex` onto the host's own `PATH`, kept entirely
+  separate from the target flex in `$OWNOS_ROOT/usr/bin`.
+- **File** — the book's recipe is pure native and doesn't work unmodified:
+  File's own build compiles `magic.mgc` by *running* the `file` binary it
+  just built against the Magdir source fragments. File's own
+  `magic/Makefile.am` already anticipates this (`IS_CROSS_COMPILE`
+  conditional): when cross-compiling, it looks for a `file` binary on
+  `PATH` and refuses to proceed unless `file --version` reports the exact
+  same version being built. Fixed by: (1) extracting a **second copy** of
+  the File source, (2) configuring and building it natively (no
+  `--host`), (3) `make install`-ing it to `/usr/local` on the build host
+  (a bare copy of the libtool wrapper script is not enough — it execs a
+  sibling `.libs/file` that doesn't exist outside the build tree, so it
+  must be properly installed), (4) then re-running `configure`/`make` for
+  the real aarch64-target copy with the native `file` now resolvable on
+  `PATH`. This two-copy "build a native helper first" pattern is File's
+  own documented expectation, not a workaround — expect to repeat it for
+  any later package whose build process needs to execute its own output
+  (Groff and Perl are candidates; watch for similar `IS_CROSS_COMPILE`-
+  style guards or test-running build steps as each is reached).
+- **Bc** — has first-class `HOSTCC`/`CC` separation built into its own
+  `configure.sh` (not autoconf) specifically for this situation:
+  `gen/strgen.c` (a small code generator that turns `gen/lib.bc`/
+  `gen/lib2.bc` into embeddable C source) must run on the build host, but
+  the rest of bc must compile for aarch64. Fixed simply by setting
+  `CC="${OWNOS_TGT}-gcc -std=c99"` and leaving `HOSTCC` unset (defaults to
+  the host's own `gcc`) — no native/target source-tree duplication
+  needed, unlike File. `make test` (which runs the aarch64 binary) was
+  skipped, same as every other package; `make`/`make install` alone are
+  safe.
+
+**General lesson for the rest of Stage 4:** before trusting a plain
+`./configure --host=... && make && make install` for any package, check
+whether its default `make`/`all` target depends on running its own
+just-built output (test suites wired into `all` rather than a separate
+`check`, or a "compile this generated-data file by running the binary we
+just built" step). Autoconf-only packages are safe by construction; hand-
+rolled Makefiles and anything with a `gen/`-style code-generation step are
+not and need a case-by-case check.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
