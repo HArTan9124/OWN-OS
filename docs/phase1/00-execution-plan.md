@@ -482,7 +482,17 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   failing target, so `make`'s dependency check treats them as already
   up to date and skips regenerating them — `install` then completed
   cleanly. Verified `groff`/`troff` are genuine aarch64.
-- [ ] Remaining Chapter 8 package list (~18 packages) — in progress,
+- [x] **Vim** 9.2.0858 (deviation: pinned 9.1.1629 unreachable, see
+  Document 11 §3.15) — built, installed. Configured with a batch of
+  `vim_cv_*` cache-variable presets up front (same cross-compile
+  pattern as Flex/Diffutils) rather than discovering each one from a
+  failed configure run. Built and linked cleanly on the first try.
+  `make install`'s own `strip` step failed (`Unable to recognise the
+  format`) because it invokes the plain host `strip`, not the cross
+  one — stripped the binary by hand with `${OWNOS_TGT}-strip`
+  afterward; everything else installed correctly. `vi` symlinked to
+  `vim`.
+- [ ] Remaining Chapter 8 package list (~17 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [x] Essential files created directly in `$OWNOS_ROOT`: `/etc/mtab`
