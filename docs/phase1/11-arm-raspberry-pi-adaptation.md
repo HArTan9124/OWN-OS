@@ -533,17 +533,22 @@ from a full gnulib module list, and plain `autoreconf` without that
 step fails with "possibly undefined macro" errors for gnulib-internal
 macros (`gl_PTHREADLIB`, `gl_WEAK_SYMBOLS`, etc.) that live outside
 what's already checked into the tarball's `m4/`. Not worth chasing
-for a single missing `#define`. **Simpler fix actually used:**
-re-extract and re-patch cleanly, run the tarball's own shipped
-`./configure` unmodified (no autoreconf), then hand-add `#define
-GNULIB_MBFILE 1` directly to the generated `lib/config.h` before
-`make` — equivalent to what the regenerated `configure` would have
-produced, without needing to regenerate anything. **General lesson:**
-a patch touching `configure.ac`/`m4/*.m4` doesn't always need a full
-`autoreconf` — when the actual effect is one or two `AC_DEFINE`s,
-check what symbol(s) would have ended up in `config.h` and add them
-by hand; save `autoreconf` for patches that add new configure *checks*
-or *options*, not just preprocessor defines.
+for a single missing `#define`. First tried hand-adding `#define
+GNULIB_MBFILE 1` to the generated `lib/config.h` — `make` silently
+regenerated `config.h` from `config.status` on its next run (a normal
+Makefile dependency rule, unaware of the manual edit) and erased it,
+so the same error recurred on rebuild. **Actual fix:** edit the
+*source* header instead — `lib/mbchar.h` (not generated, won't be
+clobbered by `config.status`) — adding `#ifndef GNULIB_MBFILE
+/ #define GNULIB_MBFILE 1 / #endif` right after its own include guard,
+making the `buf` member unconditionally present regardless of what
+`config.h` says. **General lesson:** a patch touching
+`configure.ac`/`m4/*.m4` doesn't always need a full `autoreconf` —
+when the actual effect is one or two `AC_DEFINE`s, the equivalent
+`#define` can go directly into whichever *source* header the missing
+symbol gates, never into a generated file (`config.h`, `Makefile`,
+anything `config.status` owns) since `make` will regenerate those and
+discard a manual edit on the next build.
 
 ## 4. Package list changes
 
