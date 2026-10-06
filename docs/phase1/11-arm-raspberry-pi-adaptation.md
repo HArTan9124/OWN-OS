@@ -83,6 +83,55 @@ cross-compile, package by package, through what was Chapter 8
 (`05-base-system-build.md`), using the same `--host`/`--build` pattern
 for every one of the ~90 packages.
 
+### 3.1 Two real bugs found and fixed during execution (2026-10-06)
+
+Both discovered building GCC pass 1 / libstdc++ in this session — recorded
+here because they'll recur if this plan is ever re-executed from a clean
+checkout, and the original draft of this document got both wrong.
+
+**Bug 1 — the `--with-gxx-include-dir` sysroot trick doesn't apply to our
+layout.** `04-toolchain-bootstrap.md`'s GCC-pass-1 flags (inherited
+from the book) include `--with-gxx-include-dir=$LFS_TGT.../include/c++/...`
+for the later libstdc++ build, relying on a book-specific fact: stock
+LFS's `$LFS/tools` is *nested inside* `$LFS` itself, so DESTDIR-prefixing
+a sysroot-relative path lands in the right place. Our `$OWNOS_TOOLS`
+(`/build/tools`) and `$OWNOS_ROOT` (`/build/root`) are **siblings, not
+nested** — so the same flag, installed via `DESTDIR=$OWNOS_ROOT`,
+produced a nonsense double-prefixed path
+(`/build/root/build/tools/.../include/c++/15.2.0`) instead of where the
+compiler actually looks. Confirmed by checking the *compiler's own*
+header search path (`$TGT-g++ -v -c`, not the book's assumptions) —
+GCC silently omits nonexistent search directories from that output,
+which is what made this discoverable: once the headers existed at the
+*right* path, they showed up. **Fix applied:** install libstdc++'s
+headers directly under `$OWNOS_TOOLS` (no `DESTDIR` sysroot-prefixing
+for that specific path), not under `$OWNOS_ROOT`.
+
+**Bug 2 — aarch64 has its own `lib64`-by-default, just like x86_64
+does.** §4.1 of the main toolchain document carries the book's
+x86_64-only `sed` patch to `gcc/config/i386/t-linux64` (forcing 64-bit
+libs into `lib` instead of `lib64`), and this document originally said
+that patch was "irrelevant since our target is aarch64, not x86_64."
+**That reasoning was wrong.** GCC's aarch64 backend has its own,
+exactly analogous file —
+`gcc/config/aarch64/t-aarch64-linux` — setting
+`MULTILIB_OSDIRNAMES = mabi.lp64=../lib64...`. Left unpatched, it
+silently splits the final system across both `/usr/lib` (Glibc, which
+has its own explicit `libc_cv_slibdir=/usr/lib` override) and
+`/usr/lib64` (everything GCC itself places, starting with libstdc++) —
+exactly the split-library-directory mess
+`04-toolchain-bootstrap.md` §4.1 names as a hard rule to avoid.
+**Fix applied:** `sed -e '/mabi.lp64=/s@../lib64@../lib@' -i gcc/config/aarch64/t-aarch64-linux`,
+done *before* GCC pass 1 is configured. This value gets compiled into
+the cross-compiler at **its own** configure/build time, not read fresh
+by every later package that uses it — discovered the hard way, after
+patching the source too late and having to reconfigure and rebuild
+GCC pass 1 a second time to pick it up. **Any clean re-execution of
+this plan must apply this patch before GCC pass 1 is first configured,
+immediately after extracting the GCC source** (same point in the
+sequence as the book's own x86_64 `t-linux64` patch) — not as an
+afterthought once a problem shows up downstream.
+
 ## 4. Package list changes
 
 The package inventory in `03-sources-and-packages.md` mostly still
