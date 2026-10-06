@@ -310,7 +310,22 @@ done for Binutils/GCC/Glibc/libstdc++ in Stage 3.
   configure); fixed globally via `OWNOS_CC="...-gcc -std=gnu17"` in
   `env.sh`, applied to every configure call from here on. See Document
   11 §3.7/§3.8.
-- [ ] Remaining Chapter 8 package list (~68 packages) — in progress,
+- [x] Attr 2.5.1, Acl 2.3.1, Libcap 2.76, Libxcrypt 4.4.38, Shadow 4.18.0
+  — built, installed. Shadow needed `--without-libbsd` (its configure
+  defaults `--with-libbsd=yes` even without probing availability first,
+  and glibc has no `readpassphrase()`). `/etc/passwd`, `/etc/group`,
+  `/etc/shadow` still need hand-writing (no `useradd`/`pwconv` run —
+  nothing executes cross-built binaries on this host) — folded into the
+  "FHS tree + essential files" task below rather than done piecemeal.
+- [ ] **Binutils (final) and GCC (final)** — next, and structurally the
+  hardest remaining step: unlike Stage 3's Binutils/GCC pass 1 (which
+  *run on* x86_64 to produce aarch64 code — a normal cross-compiler),
+  these need to *run on* aarch64 (the Pi, once booted) and themselves
+  *produce* aarch64 code — a Canadian cross (`--build=x86_64-...
+  --host=aarch64-... --target=aarch64-...`). Needed so the finished OS
+  has its own native compiler, not just binaries we cross-compiled for
+  it. Distinct purpose from pass 1, not a repeat of it.
+- [ ] Remaining Chapter 8 package list (~63 packages) — in progress,
   see live status in chat / commit history rather than duplicated here
   to avoid this file going stale mid-build.
 - [ ] FHS tree + essential files (`/etc/passwd`, `/etc/group`,
